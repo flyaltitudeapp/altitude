@@ -12,7 +12,7 @@ const editRankSchema = z.object({
   name: z
     .string()
     .min(1, 'Rank name is required')
-    .max(15, 'Rank name must be 15 characters or less'),
+    .max(100, 'Rank name must be 100 characters or less'),
   minimumFlightTime: z.coerce
     .number()
     .min(0, 'Minimum flight time must be 0 or greater'),

@@ -103,8 +103,8 @@ export function RankForm({
       toast.error('Rank name is required');
       return;
     }
-    if (name.trim().length > 15) {
-      toast.error('Rank name must be 15 characters or less');
+    if (name.trim().length > 100) {
+      toast.error('Rank name must be 100 characters or less');
       return;
     }
     if (!minimumFlightTime.trim()) {
@@ -141,7 +141,7 @@ export function RankForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="First Officer"
-            maxLength={15}
+            maxLength={100}
             required
           />
         </div>
