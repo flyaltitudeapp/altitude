@@ -23,6 +23,21 @@ async function getFlightTimeForUser(userId: string): Promise<number> {
   return result?.totalFlightTime ?? 0;
 }
 
+async function getCareerFlightTimeForUser(userId: string): Promise<number> {
+  const result = await db
+    .select({
+      careerFlightTime:
+        sql<number>`COALESCE(SUM(CASE WHEN ${pireps.status} = 'approved' AND ${pireps.category} = 'career' THEN ${pireps.flightTime} ELSE 0 END), 0)`.as(
+          'careerFlightTime'
+        ),
+    })
+    .from(pireps)
+    .where(eq(pireps.userId, userId))
+    .get();
+
+  return result?.careerFlightTime ?? 0;
+}
+
 interface UsersQueryOptions {
   hideInactive?: boolean;
 }
@@ -150,6 +165,7 @@ async function getUserById(id: string): Promise<User | null> {
 }
 
 export {
+  getCareerFlightTimeForUser,
   getFlightTimeForUser,
   getUnverifiedUsersPaginated,
   getUserById,

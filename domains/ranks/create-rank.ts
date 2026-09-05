@@ -6,6 +6,7 @@ interface CreateRankData {
   minimumFlightTime: number;
   maximumFlightTime: number | null;
   allowAllAircraft: boolean;
+  typeRatingSlots: number;
   aircraftIds?: string[];
 }
 
@@ -20,6 +21,7 @@ export async function createRank(data: CreateRankData) {
       minimumFlightTime: data.minimumFlightTime,
       maximumFlightTime: data.maximumFlightTime,
       allowAllAircraft: data.allowAllAircraft,
+      typeRatingSlots: data.typeRatingSlots,
       createdAt: new Date(),
       updatedAt: new Date(),
     })

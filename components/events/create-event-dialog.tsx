@@ -34,12 +34,13 @@ export default function CreateEventDialog({
   const [aircraft, setAircraft] = useState<Aircraft[]>([]);
   const [multipliers, setMultipliers] = useState<Multiplier[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const { dialogStyles } = useResponsiveDialog({
     maxWidth: 'sm:max-w-[800px]',
   });
 
   useEffect(() => {
-    if (open && aircraft.length === 0 && !isLoading) {
+    if (open && !hasLoaded && !isLoading) {
       setIsLoading(true);
       getEventFormDataAction()
         .then((result) => {
@@ -47,6 +48,7 @@ export default function CreateEventDialog({
             setAircraft(result.data.aircraft);
             setMultipliers(result.data.multipliers);
           }
+          setHasLoaded(true);
         })
         .catch(() => {
           toast.error('Failed to load form data');
@@ -55,7 +57,7 @@ export default function CreateEventDialog({
           setIsLoading(false);
         });
     }
-  }, [open, aircraft.length, isLoading]);
+  }, [open, hasLoaded, isLoading]);
 
   const { execute, isPending } = useAction(createEventAction, {
     onSuccess: ({ data }) => {

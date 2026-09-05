@@ -136,6 +136,7 @@ export const airline = sqliteTable(
     rankUpWebhookUrl: text('rank_up_webhook_url'),
     leaveRequestWebhookUrl: text('leave_request_webhook_url'),
     inactivityWebhookUrl: text('inactivity_webhook_url'),
+    typeRatingWebhookUrl: text('type_rating_webhook_url'),
     inactivityPeriod: integer('inactivity_period', {
       mode: 'number',
     }).$defaultFn(() => 30),
@@ -244,6 +245,9 @@ export const pireps = sqliteTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     status: text('status').notNull(),
+    category: text('category', { enum: ['casual', 'career'] })
+      .notNull()
+      .default('casual'),
     createdAt: integer('created_at', { mode: 'timestamp' })
       .$defaultFn(() => new Date())
       .notNull(),
@@ -253,14 +257,22 @@ export const pireps = sqliteTable(
   },
   (table) => [
     t.index('pireps_status_date_index').on(table.status, table.date),
-    t.index('pireps_user_status_index').on(table.userId, table.status),
+    t
+      .index('pireps_user_status_index')
+      .on(table.userId, table.status, table.category),
 
     t
       .index('pireps_analytics_covering')
-      .on(table.status, table.date, table.userId, table.flightTime),
+      .on(
+        table.status,
+        table.date,
+        table.category,
+        table.userId,
+        table.flightTime
+      ),
     t
       .index('pireps_daily_stats')
-      .on(table.status, table.date, table.flightTime),
+      .on(table.status, table.date, table.category, table.flightTime),
   ]
 );
 
@@ -341,11 +353,14 @@ export const ranks = sqliteTable(
     name: text('name').notNull().unique(),
     minimumFlightTime: integer('minimum_flight_time', { mode: 'number' })
       .notNull()
-      .unique(), // The minimum flight time to get the rank
+      .unique(), // The minimum career flight time to get the rank
     maximumFlightTime: integer('maximum_flight_time', { mode: 'number' }), // The maximum flight time you can fly with this rank (null = no limit)
     allowAllAircraft: integer('allow_all_aircraft', { mode: 'boolean' })
       .$defaultFn(() => false)
       .notNull(), // If true, this rank can fly any aircraft regardless of rankAircraft entries
+    typeRatingSlots: integer('type_rating_slots', { mode: 'number' })
+      .default(0)
+      .notNull(), // How many typeratings a pilot at this rank may hold (no stacking)
     createdAt: integer('created_at', { mode: 'timestamp' })
       .$defaultFn(() => new Date())
       .notNull(),
@@ -381,6 +396,71 @@ export const rankAircraft = sqliteTable(
     t.index('rank_aircraft_rank_id_index').on(table.rankId),
     t.index('rank_aircraft_aircraft_id_index').on(table.aircraftId),
     t.uniqueIndex('rank_aircraft_unique').on(table.rankId, table.aircraftId),
+  ]
+);
+
+export const typeratings = sqliteTable(
+  'typeratings',
+  {
+    id: text('id').primaryKey(),
+    name: text('name').notNull().unique(),
+    image: text('image'),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .$defaultFn(() => new Date())
+      .notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp' })
+      .$defaultFn(() => new Date())
+      .notNull(),
+  },
+  (table) => [t.index('typeratings_name_index').on(table.name)]
+);
+
+export const typeratingAircraft = sqliteTable(
+  'typerating_aircraft',
+  {
+    id: text('id').primaryKey(),
+    typeratingId: text('typerating_id')
+      .notNull()
+      .references(() => typeratings.id, { onDelete: 'cascade' }),
+    aircraftId: text('aircraft_id')
+      .notNull()
+      .references(() => aircraft.id, { onDelete: 'cascade' }),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .$defaultFn(() => new Date())
+      .notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp' })
+      .$defaultFn(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    t.index('typerating_aircraft_typerating_id_index').on(table.typeratingId),
+    t.index('typerating_aircraft_aircraft_id_index').on(table.aircraftId),
+    t
+      .uniqueIndex('typerating_aircraft_unique')
+      .on(table.typeratingId, table.aircraftId),
+  ]
+);
+
+export const userTyperatings = sqliteTable(
+  'user_typeratings',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    typeratingId: text('typerating_id')
+      .notNull()
+      .references(() => typeratings.id, { onDelete: 'cascade' }),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .$defaultFn(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    t.index('user_typeratings_user_id_index').on(table.userId),
+    t.index('user_typeratings_typerating_id_index').on(table.typeratingId),
+    t
+      .uniqueIndex('user_typeratings_unique')
+      .on(table.userId, table.typeratingId),
   ]
 );
 
@@ -627,6 +707,15 @@ export type NewRank = InferInsertModel<typeof ranks>;
 
 export type RankAircraft = InferSelectModel<typeof rankAircraft>;
 export type NewRankAircraft = InferInsertModel<typeof rankAircraft>;
+
+export type Typerating = InferSelectModel<typeof typeratings>;
+export type NewTyperating = InferInsertModel<typeof typeratings>;
+
+export type TyperatingAircraft = InferSelectModel<typeof typeratingAircraft>;
+export type NewTyperatingAircraft = InferInsertModel<typeof typeratingAircraft>;
+
+export type UserTyperating = InferSelectModel<typeof userTyperatings>;
+export type NewUserTyperating = InferInsertModel<typeof userTyperatings>;
 
 export type LeaveRequest = InferSelectModel<typeof leaveRequests>;
 export type NewLeaveRequest = InferInsertModel<typeof leaveRequests>;

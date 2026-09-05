@@ -43,6 +43,7 @@ interface RankFormProps {
     name: string;
     minimumFlightTime: string;
     maximumFlightTime: string;
+    typeRatingSlots: string;
     allowAllAircraft: boolean;
     selectedAircraftIds: string[];
   };
@@ -50,6 +51,7 @@ interface RankFormProps {
     name: string;
     minimumFlightTime: string;
     maximumFlightTime: string;
+    typeRatingSlots: string;
     allowAllAircraft: boolean;
     selectedAircraftIds: string[];
   }) => void;
@@ -71,6 +73,9 @@ export function RankForm({
   );
   const [maximumFlightTime, setMaximumFlightTime] = useState(
     initialValues.maximumFlightTime
+  );
+  const [typeRatingSlots, setTypeRatingSlots] = useState(
+    initialValues.typeRatingSlots
   );
   const [allowAllAircraft, setAllowAllAircraft] = useState(
     initialValues.allowAllAircraft
@@ -108,12 +113,12 @@ export function RankForm({
       return;
     }
     if (!minimumFlightTime.trim()) {
-      toast.error('Minimum flight time is required');
+      toast.error('Minimum career flight time is required');
       return;
     }
     const minFlightTime = Number(minimumFlightTime);
     if (isNaN(minFlightTime) || minFlightTime < 0) {
-      toast.error('Minimum flight time must be a valid number');
+      toast.error('Minimum career flight time must be a valid number');
       return;
     }
     if (!allowAllAircraft && selectedAircraftIds.length === 0) {
@@ -126,6 +131,7 @@ export function RankForm({
       name: name.trim(),
       minimumFlightTime: minimumFlightTime,
       maximumFlightTime: maximumFlightTime,
+      typeRatingSlots: typeRatingSlots,
       allowAllAircraft,
       selectedAircraftIds,
     });
@@ -148,7 +154,7 @@ export function RankForm({
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Label htmlFor="minimumFlightTime">
-              Minimum Flight Time (hours)
+              Minimum Career Flight Time (hours)
             </Label>
             <TooltipProvider>
               <Tooltip>
@@ -157,8 +163,8 @@ export function RankForm({
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="max-w-xs">
-                    The minimum flight hours required for a pilot to be eligible
-                    for this rank.
+                    The minimum career flight hours required for a pilot to be
+                    eligible for this rank.
                   </p>
                 </TooltipContent>
               </Tooltip>
@@ -198,6 +204,33 @@ export function RankForm({
           value={maximumFlightTime}
           onChange={(e) => setMaximumFlightTime(e.target.value)}
           placeholder="100 (leave empty for no limit)"
+          min="0"
+          className="w-full"
+        />
+      </div>
+      <div className="space-y-2 mt-2">
+        <div className="flex items-center gap-2">
+          <Label htmlFor="typeRatingSlots">Type Rating Slots</Label>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs">
+                  How many type ratings a pilot at this rank may hold. Slots do
+                  not stack across ranks. Default is 0.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        <Input
+          id="typeRatingSlots"
+          type="number"
+          value={typeRatingSlots}
+          onChange={(e) => setTypeRatingSlots(e.target.value)}
+          placeholder="0"
           min="0"
           className="w-full"
         />
@@ -334,6 +367,7 @@ export default function CreateRankDialog({ children }: CreateRankDialogProps) {
     { id: string; name: string; livery: string }[]
   >([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const { dialogStyles } = useResponsiveDialog({
     maxWidth: 'sm:max-w-[500px]',
   });
@@ -358,13 +392,14 @@ export default function CreateRankDialog({ children }: CreateRankDialogProps) {
   });
 
   useEffect(() => {
-    if (open && aircraft.length === 0 && !isLoadingData) {
+    if (open && !hasLoaded && !isLoadingData) {
       setIsLoadingData(true);
       getRankFormDataAction()
         .then((result) => {
           if (result?.data) {
             setAircraft(result.data.aircraft);
           }
+          setHasLoaded(true);
         })
         .catch((error) => {
           const errorMessage = extractActionErrorMessage(
@@ -377,7 +412,7 @@ export default function CreateRankDialog({ children }: CreateRankDialogProps) {
           setIsLoadingData(false);
         });
     }
-  }, [open, aircraft.length, isLoadingData]);
+  }, [open, hasLoaded, isLoadingData]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -393,7 +428,7 @@ export default function CreateRankDialog({ children }: CreateRankDialogProps) {
             Enter rank details and configure aircraft permissions.
           </DialogDescription>
         </DialogHeader>
-        {isLoadingData || aircraft.length === 0 ? (
+        {isLoadingData || !hasLoaded ? (
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
@@ -420,6 +455,7 @@ export default function CreateRankDialog({ children }: CreateRankDialogProps) {
               name: '',
               minimumFlightTime: '',
               maximumFlightTime: '',
+              typeRatingSlots: '',
               allowAllAircraft: false,
               selectedAircraftIds: [],
             }}
@@ -427,6 +463,7 @@ export default function CreateRankDialog({ children }: CreateRankDialogProps) {
               name,
               minimumFlightTime,
               maximumFlightTime,
+              typeRatingSlots,
               allowAllAircraft,
               selectedAircraftIds,
             }) => {
@@ -438,6 +475,9 @@ export default function CreateRankDialog({ children }: CreateRankDialogProps) {
                 name: name.trim(),
                 minimumFlightTime: minFlightTime,
                 maximumFlightTime: maxFlightTime,
+                typeRatingSlots: typeRatingSlots.trim()
+                  ? Number(typeRatingSlots)
+                  : 0,
                 allowAllAircraft,
                 aircraftIds: selectedAircraftIds,
               });

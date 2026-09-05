@@ -291,10 +291,19 @@ function createPirepModal(flightIndex: number, multiplierId: string) {
     .setPlaceholder('Enter any additional comments...')
     .setRequired(false);
 
+  const categoryInput = new TextInputBuilder()
+    .setCustomId('category')
+    .setLabel('Flight Category (casual or career)')
+    .setStyle(TextInputStyle.Short)
+    .setPlaceholder('casual')
+    .setRequired(true)
+    .setMaxLength(6);
+
   const rows = [
     new ActionRowBuilder<TextInputBuilder>().addComponents(flightNumberInput),
     new ActionRowBuilder<TextInputBuilder>().addComponents(cargoInput),
     new ActionRowBuilder<TextInputBuilder>().addComponents(fuelInput),
+    new ActionRowBuilder<TextInputBuilder>().addComponents(categoryInput),
     new ActionRowBuilder<TextInputBuilder>().addComponents(commentsInput),
   ];
 
@@ -570,6 +579,19 @@ export async function handleModal(interaction: ModalSubmitInteraction) {
     const fuelInput = interaction.fields.getTextInputValue('fuel');
     const comments =
       interaction.fields.getTextInputValue('comments') || undefined;
+    const categoryRaw = interaction.fields
+      .getTextInputValue('category')
+      .trim()
+      .toLowerCase();
+
+    if (categoryRaw !== 'casual' && categoryRaw !== 'career') {
+      await interaction.reply({
+        content: '❌ Category must be either "casual" or "career"',
+        flags: 64,
+      });
+      return;
+    }
+    const category = categoryRaw as 'casual' | 'career';
 
     const cargo = parseInt(cargoInput);
     const fuel = parseInt(fuelInput);
@@ -641,6 +663,7 @@ export async function handleModal(interaction: ModalSubmitInteraction) {
       multiplierId:
         selectedMultiplierId === 'none' ? undefined : selectedMultiplierId,
       comments,
+      category,
     };
 
     const { adjustedFlightTime, newPirep } = await createPirep(

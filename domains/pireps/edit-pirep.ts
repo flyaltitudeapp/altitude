@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { db } from '@/db';
 import { logPirepEvent } from '@/db/queries/pireps';
-import { getFlightTimeForUser } from '@/db/queries/users';
+import { getCareerFlightTimeForUser } from '@/db/queries/users';
 import { multipliers, pireps } from '@/db/schema';
 import { maybeScheduleRankup } from '@/lib/rankup-trigger';
 import { hasRequiredRole, parseRolesField } from '@/lib/roles';
@@ -73,6 +73,7 @@ export async function editPirep(
       comments: pireps.comments,
       deniedReason: pireps.deniedReason,
       status: pireps.status,
+      category: pireps.category,
     })
     .from(pireps)
     .where(eq(pireps.id, id))
@@ -197,12 +198,16 @@ export async function editPirep(
   }
 
   const newFlightTime = updates.flightTime ?? current.flightTime;
-  if (newFlightTime !== current.flightTime) {
-    const totalFlightTime = await getFlightTimeForUser(current.userId);
+  if (
+    newFlightTime !== current.flightTime &&
+    current.category === 'career' &&
+    current.status === 'approved'
+  ) {
+    const careerFlightTime = await getCareerFlightTimeForUser(current.userId);
     maybeScheduleRankup(
       current.userId,
-      totalFlightTime - (newFlightTime - current.flightTime),
-      totalFlightTime
+      careerFlightTime - (newFlightTime - current.flightTime),
+      careerFlightTime
     );
   }
 }

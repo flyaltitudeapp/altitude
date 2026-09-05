@@ -15,13 +15,17 @@ const editRankSchema = z.object({
     .max(100, 'Rank name must be 100 characters or less'),
   minimumFlightTime: z.coerce
     .number()
-    .min(0, 'Minimum flight time must be 0 or greater'),
+    .min(0, 'Minimum career flight time must be 0 or greater'),
   maximumFlightTime: z.coerce
     .number()
-    .min(0, 'Maximum flight time must be 0 or greater')
+    .min(0, 'Maximum career flight time must be 0 or greater')
     .optional()
     .nullable(),
   allowAllAircraft: z.boolean().default(false),
+  typeRatingSlots: z.coerce
+    .number()
+    .min(0, 'Type rating slots must be 0 or greater')
+    .default(0),
   aircraftIds: z.array(z.string()).optional(),
 });
 
@@ -35,6 +39,7 @@ export const editRankAction = createRoleActionClient(['ranks'])
         minimumFlightTime,
         maximumFlightTime,
         allowAllAircraft,
+        typeRatingSlots,
         aircraftIds,
       },
     }) => {
@@ -45,6 +50,7 @@ export const editRankAction = createRoleActionClient(['ranks'])
           minimumFlightTime,
           maximumFlightTime,
           allowAllAircraft,
+          typeRatingSlots,
           aircraftIds,
         });
 
@@ -59,7 +65,7 @@ export const editRankAction = createRoleActionClient(['ranks'])
           unique: {
             name: 'A rank with this name already exists',
             minimum_flight_time:
-              'A rank with this minimum flight time already exists',
+              'A rank with this career minimum career flight time already exists',
           },
           fallback: 'Failed to update rank',
         });

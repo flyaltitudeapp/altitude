@@ -9,6 +9,7 @@ interface EditRankData {
   minimumFlightTime: number;
   maximumFlightTime: number | null | undefined;
   allowAllAircraft: boolean;
+  typeRatingSlots: number;
   aircraftIds?: string[];
 }
 
@@ -18,6 +19,7 @@ export async function editRank(data: EditRankData) {
     minimumFlightTime: data.minimumFlightTime,
     maximumFlightTime: data.maximumFlightTime ?? null,
     allowAllAircraft: data.allowAllAircraft,
+    typeRatingSlots: data.typeRatingSlots,
     updatedAt: new Date(),
   };
 

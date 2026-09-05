@@ -30,6 +30,7 @@ interface EditRankDialogProps {
     name: string;
     minimumFlightTime: number;
     maximumFlightTime: number | null;
+    typeRatingSlots: number;
     allowAllAircraft: boolean;
     aircraftIds: string[];
   };
@@ -44,6 +45,7 @@ export default function EditRankDialog({
     { id: string; name: string; livery: string }[]
   >([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const { dialogStyles } = useResponsiveDialog({
     maxWidth: 'sm:max-w-[500px]',
   });
@@ -66,13 +68,14 @@ export default function EditRankDialog({
   });
 
   useEffect(() => {
-    if (open && aircraft.length === 0 && !isLoadingData) {
+    if (open && !hasLoaded && !isLoadingData) {
       setIsLoadingData(true);
       getRankFormDataAction()
         .then((result) => {
           if (result?.data) {
             setAircraft(result.data.aircraft);
           }
+          setHasLoaded(true);
         })
         .catch((error) => {
           const errorMessage = extractActionErrorMessage(
@@ -85,7 +88,7 @@ export default function EditRankDialog({
           setIsLoadingData(false);
         });
     }
-  }, [open, aircraft.length, isLoadingData]);
+  }, [open, hasLoaded, isLoadingData]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -100,7 +103,7 @@ export default function EditRankDialog({
             Update rank details and aircraft permissions.
           </DialogDescription>
         </DialogHeader>
-        {isLoadingData || aircraft.length === 0 ? (
+        {isLoadingData || !hasLoaded ? (
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
@@ -130,6 +133,7 @@ export default function EditRankDialog({
                 rank.maximumFlightTime !== null
                   ? String(rank.maximumFlightTime)
                   : '',
+              typeRatingSlots: String(rank.typeRatingSlots),
               allowAllAircraft: rank.allowAllAircraft,
               selectedAircraftIds: rank.aircraftIds,
             }}
@@ -137,12 +141,14 @@ export default function EditRankDialog({
               name,
               minimumFlightTime,
               maximumFlightTime,
+              typeRatingSlots,
               allowAllAircraft,
               selectedAircraftIds,
             }: {
               name: string;
               minimumFlightTime: string;
               maximumFlightTime: string;
+              typeRatingSlots: string;
               allowAllAircraft: boolean;
               selectedAircraftIds: string[];
             }) => {
@@ -155,6 +161,9 @@ export default function EditRankDialog({
                 name: name.trim(),
                 minimumFlightTime: minFlightTime,
                 maximumFlightTime: maxFlightTime,
+                typeRatingSlots: typeRatingSlots.trim()
+                  ? Number(typeRatingSlots)
+                  : 0,
                 allowAllAircraft,
                 aircraftIds: selectedAircraftIds,
               });

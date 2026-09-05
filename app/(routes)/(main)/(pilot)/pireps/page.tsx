@@ -3,9 +3,9 @@ import type { Metadata } from 'next';
 import { PirepForm } from '@/components/pireps/pirep-form';
 import {
   getAircraft,
-  getAllowedAircraftForRank,
-  getFlightTimeForUser,
+  getCareerFlightTimeForUser,
   getMultipliers,
+  getTyperatedAircraftForUser,
   getUserRank,
 } from '@/db/queries';
 import { authCheck } from '@/lib/auth-check';
@@ -19,19 +19,17 @@ export function generateMetadata(): Metadata {
 export default async function PirepsPage() {
   const session = await authCheck();
 
-  const flightTime = await getFlightTimeForUser(session.user.id);
+  const careerFlightTime = await getCareerFlightTimeForUser(session.user.id);
 
-  const [aircraft, multipliers, userRank] = await Promise.all([
-    (async () => {
-      const rank = await getUserRank(flightTime);
-      if (rank) {
-        return await getAllowedAircraftForRank(rank.id);
-      }
-      return await getAircraft();
-    })(),
-    getMultipliers(),
-    getUserRank(flightTime),
-  ]);
+  // Casual mode allows any aircraft; career mode is restricted to the pilot's
+  // held typeratings.
+  const [casualAircraft, careerAircraft, multipliers, userRank] =
+    await Promise.all([
+      getAircraft(),
+      getTyperatedAircraftForUser(session.user.id),
+      getMultipliers(),
+      getUserRank(careerFlightTime),
+    ]);
 
   return (
     <div className="space-y-6">
@@ -47,7 +45,8 @@ export default async function PirepsPage() {
         </div>
       </div>
       <PirepForm
-        aircraft={aircraft}
+        casualAircraft={casualAircraft}
+        careerAircraft={careerAircraft}
         multipliers={multipliers}
         maxFlightHours={userRank?.maximumFlightTime ?? null}
       />

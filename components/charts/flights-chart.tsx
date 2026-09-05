@@ -27,6 +27,13 @@ export interface FlightsChartProps {
     | 'totalPireps'
     | 'totalFlightTime'
     | 'activePilots';
+  /** Optional second series drawn on the same chart (e.g. career hours next to total hours). */
+  secondarySeries?: {
+    dataKey: keyof TimeSeriesDataPoint;
+    label: string;
+    /** Format the raw value for the tooltip (e.g. formatHoursMinutes). */
+    formatValue?: (value: number) => string | number;
+  };
   customDays?: number; // Add customDays prop
 }
 
@@ -44,7 +51,11 @@ const CustomTooltip = ({
   payload,
   label,
   metric,
-}: CustomTooltipProps & { metric: FlightsChartProps['tooltipMetric'] }) => {
+  secondarySeries,
+}: CustomTooltipProps & {
+  metric: FlightsChartProps['tooltipMetric'];
+  secondarySeries?: FlightsChartProps['secondarySeries'];
+}) => {
   if (!active || !payload || !payload.length || !label) {
     return null;
   }
@@ -62,6 +73,16 @@ const CustomTooltip = ({
   };
   const metricInfo = metricMap[metric || 'totalPireps'];
 
+  const secondaryRaw = secondarySeries
+    ? (data[secondarySeries.dataKey] as number)
+    : undefined;
+  const secondaryFormatted =
+    secondarySeries && secondaryRaw !== undefined
+      ? secondarySeries.formatValue
+        ? secondarySeries.formatValue(secondaryRaw)
+        : secondaryRaw
+      : undefined;
+
   return (
     <div className="bg-background border border-border rounded-lg shadow-lg p-3">
       <p className="text-sm font-medium text-foreground mb-2">
@@ -74,6 +95,14 @@ const CustomTooltip = ({
           </span>
           <span className="text-sm font-medium">{metricInfo.value}</span>
         </div>
+        {secondarySeries && (
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-xs text-muted-foreground">
+              {secondarySeries.label}:
+            </span>
+            <span className="text-sm font-medium">{secondaryFormatted}</span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -87,6 +116,7 @@ export const FlightsChart = ({
   title,
   description,
   tooltipMetric = 'totalPireps',
+  secondarySeries,
   customDays, // Add customDays parameter
 }: FlightsChartProps) => {
   const chartConfig = useChartConfig();
@@ -120,6 +150,15 @@ export const FlightsChart = ({
     xAxisInterval = undefined;
   }
 
+  const primaryLegendLabel =
+    tooltipMetric === 'totalFlightTime'
+      ? 'Total Hours'
+      : tooltipMetric === 'newPilots'
+        ? 'New Pilots'
+        : tooltipMetric === 'activePilots'
+          ? 'Active Pilots'
+          : 'Flights';
+
   return (
     <div className="w-full bg-panel rounded-md">
       <div className="pb-4 px-6 pt-6">
@@ -128,6 +167,28 @@ export const FlightsChart = ({
           {description ??
             `Daily flight activity over ${getPeriodLabel(period, customDays)}`}
         </div>
+        {secondarySeries && (
+          <div className="mt-2 flex flex-wrap items-center gap-4 text-xs">
+            <span className="flex items-center gap-1.5">
+              <span
+                className="inline-block h-2 w-3 rounded-sm"
+                style={{ backgroundColor: chartConfig.primary }}
+              />
+              <span className="text-muted-foreground">
+                {primaryLegendLabel}
+              </span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span
+                className="inline-block h-2 w-3 rounded-sm"
+                style={{ backgroundColor: chartConfig.secondary }}
+              />
+              <span className="text-muted-foreground">
+                {secondarySeries.label}
+              </span>
+            </span>
+          </div>
+        )}
       </div>
       <div className="p-6 pt-0">
         <ResponsiveContainer width="100%" height={height}>
@@ -145,6 +206,24 @@ export const FlightsChart = ({
                 <stop
                   offset="95%"
                   stopColor={chartConfig.primary}
+                  stopOpacity={0.05}
+                />
+              </linearGradient>
+              <linearGradient
+                id="flightSecondaryGradient"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop
+                  offset="5%"
+                  stopColor={chartConfig.secondary}
+                  stopOpacity={0.45}
+                />
+                <stop
+                  offset="95%"
+                  stopColor={chartConfig.secondary}
                   stopOpacity={0.05}
                 />
               </linearGradient>
@@ -178,7 +257,12 @@ export const FlightsChart = ({
             />
 
             <Tooltip
-              content={<CustomTooltip metric={tooltipMetric} />}
+              content={
+                <CustomTooltip
+                  metric={tooltipMetric}
+                  secondarySeries={secondarySeries}
+                />
+              }
               cursor={{ fill: 'transparent' }}
             />
 
@@ -195,6 +279,21 @@ export const FlightsChart = ({
                 fill: chartConfig.background,
               }}
             />
+            {secondarySeries && (
+              <Area
+                type="monotone"
+                dataKey={secondarySeries.dataKey}
+                stroke={chartConfig.secondary}
+                strokeWidth={2}
+                fill="url(#flightSecondaryGradient)"
+                activeDot={{
+                  r: 4,
+                  stroke: chartConfig.secondary,
+                  strokeWidth: 2,
+                  fill: chartConfig.background,
+                }}
+              />
+            )}
           </AreaChart>
         </ResponsiveContainer>
       </div>

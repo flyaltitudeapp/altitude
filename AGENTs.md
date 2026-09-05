@@ -29,8 +29,6 @@ The goal is to provide every agent with a single source of truth—no more scatt
 | `public/styles/`  | Optional alternate Tailwind themes.                                     |
 | `app/globals.css` | Global CSS variables **authoritative color source**.                    |
 
-Sub-directories MAY ship their own `AGENT.md` with extra guidance; the root file always wins on conflict.
-
 ### 2.2 Languages & Toolchain
 
 - **TypeScript 5.8** – `"strict": true`, `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`, etc.

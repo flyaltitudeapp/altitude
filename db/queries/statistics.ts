@@ -136,11 +136,13 @@ async function getOptimizedDailyStats(
     const dayFlights = await db.get<{
       daily_pireps: number;
       daily_flight_time: number;
+      daily_career_flight_time: number;
       daily_active_pilots: number;
     }>(sql`
       SELECT
         COUNT(*) as daily_pireps,
         COALESCE(SUM(flight_time), 0) as daily_flight_time,
+        COALESCE(SUM(CASE WHEN category = 'career' THEN flight_time ELSE 0 END), 0) as daily_career_flight_time,
         COUNT(DISTINCT user_id) as daily_active_pilots
       FROM pireps
       WHERE status = 'approved'
@@ -167,6 +169,7 @@ async function getOptimizedDailyStats(
       date: dateStr,
       totalPireps: dayFlights?.daily_pireps || 0,
       totalFlightTime: dayFlights?.daily_flight_time || 0,
+      careerFlightTime: dayFlights?.daily_career_flight_time || 0,
       activePilots: dayFlights?.daily_active_pilots || 0,
       newPilots: dayUsers?.daily_new_pilots || 0,
       totalUsers: cumulativeUsers?.total || baseUserCount?.count || 0,

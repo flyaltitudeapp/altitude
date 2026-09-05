@@ -24,6 +24,7 @@ import { deletePirepAction } from '@/actions/pireps/delete-pirep';
 import { AircraftCard, DetailsCard, RouteCard } from '@/components/logbook';
 import { InlineFlightNumberEditor } from '@/components/logbook/inline-flight-number-editor';
 import { PirepEventsDialog } from '@/components/pireps/dialogs/pirep-events-dialog';
+import { PirepCategoryBadge } from '@/components/pireps/pirep-category-badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -201,6 +202,10 @@ export function PirepDetails({
               )}
             </h4>
             <StatusBadge status={pirep.status} className="text-sm px-3 py-1" />
+            <PirepCategoryBadge
+              category={pirep.category}
+              className="text-sm px-3 py-1"
+            />
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -308,7 +313,7 @@ export function PirepDetails({
           className="h-full"
           icon={<Clock className="h-4 w-4" />}
         />
-        <DetailsCard
+        {/* <DetailsCard
           title="Multiplier"
           value={multiplier?.name || 'None'}
           subtitle={multiplier ? `x${multiplier.value}` : 'No Multiplier Added'}
@@ -319,7 +324,7 @@ export function PirepDetails({
           currentMultiplierId={pirep.multiplierId || null}
           className="h-full"
           icon={<Zap className="h-4 w-4" />}
-        />
+        /> */}
         <DetailsCard
           title="Submitted"
           value={pirep.createdAt.toLocaleDateString('en-US', {

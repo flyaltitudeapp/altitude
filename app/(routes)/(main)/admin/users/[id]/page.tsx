@@ -15,13 +15,19 @@ import { UserFlights } from '@/components/users/user-flights';
 import { UserProfile } from '@/components/users/user-profile';
 import { UserRoles } from '@/components/users/user-roles';
 import { UserStats } from '@/components/users/user-stats';
+import { UserTyperatings } from '@/components/users/user-typeratings';
 import {
   getAirline,
+  getAllTyperatings,
+  getAvailableTyperatingSlots,
+  getCareerFlightTimeForUser,
+  getCareerPirepCountForUser,
   getFlightTimeForUser,
   getUserById,
   getUserLastFlights,
   getUserPireps,
   getUserRank,
+  getUserTyperatings,
 } from '@/db/queries';
 import { getCurrentUserRoles, requireRole } from '@/lib/auth-check';
 import { parseRolesField } from '@/lib/roles';
@@ -50,14 +56,22 @@ export default async function AdminUserDetailPage({
     redirect('/admin/users');
   }
 
-  const [pirepCountResult, calculatedFlightTime, userFlights] =
-    await Promise.all([
-      getUserPireps(user.id, 1, 1),
-      getFlightTimeForUser(user.id),
-      getUserLastFlights(user.id),
-    ]);
+  const [
+    pirepCountResult,
+    calculatedFlightTime,
+    careerFlightTime,
+    careerPirepCountResult,
+    userFlights,
+  ] = await Promise.all([
+    getUserPireps(user.id, 1, 1),
+    getFlightTimeForUser(user.id),
+    getCareerFlightTimeForUser(user.id),
+    getCareerPirepCountForUser(user.id),
+    getUserLastFlights(user.id),
+  ]);
 
   const { total: pirepCount } = pirepCountResult;
+  const { careerFlights: careerPirepCount } = careerPirepCountResult;
 
   const lastPirepDate = userFlights.length > 0 ? userFlights[0].date : null;
 
@@ -96,7 +110,14 @@ export default async function AdminUserDetailPage({
   // No one can reset the owner's password
   const canResetPassword = canPerformActions && !isTargetUserOwner;
 
-  const userRank = await getUserRank(calculatedFlightTime);
+  const userRank = await getUserRank(careerFlightTime);
+
+  const [heldTyperatings, allTyperatings, availableTyperatingSlots] =
+    await Promise.all([
+      getUserTyperatings(user.id),
+      getAllTyperatings(),
+      getAvailableTyperatingSlots(user.id),
+    ]);
 
   return (
     <PageLayout className="space-y-6">
@@ -117,7 +138,9 @@ export default async function AdminUserDetailPage({
         <UserStats
           user={user}
           pirepCount={pirepCount}
+          careerPirepCount={careerPirepCount}
           flightTime={calculatedFlightTime}
+          careerFlightTime={careerFlightTime}
           lastPirepDate={lastPirepDate}
           airlinePrefix={airline?.callsign || ''}
           callsignMinRange={airline?.callsignMinRange || 1}
@@ -137,6 +160,15 @@ export default async function AdminUserDetailPage({
             isCurrentUserOwner={isCurrentUserOwner}
           />
         </div>
+
+        <UserTyperatings
+          userId={user.id}
+          heldTyperatings={heldTyperatings}
+          allTyperatings={allTyperatings}
+          availableSlots={availableTyperatingSlots}
+          totalSlots={userRank?.typeRatingSlots ?? 0}
+          canManage={canManageRoles}
+        />
 
         {canPerformActions && (
           <div className="rounded-lg border border-input bg-panel p-6">

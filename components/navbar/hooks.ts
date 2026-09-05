@@ -36,10 +36,30 @@ export const useNavItems = (
         href = resolveAdminHref() ?? href;
       }
 
+      // Drop dropdown children the user can't access (per-child roles)
+      const childrenHaveRoles = item.children?.some(
+        (c) => c.roles && c.roles.length > 0
+      );
+      let visibleChildren = item.children?.filter(
+        (c) =>
+          !c.roles ||
+          c.roles.length === 0 ||
+          hasRequiredRole(userRoles, c.roles)
+      );
+
+      // When children are role-gated, point the parent at the first accessible one
+      if (childrenHaveRoles && visibleChildren && visibleChildren.length > 0) {
+        href = visibleChildren[0].href;
+        // Collapse a single accessible child into a plain link
+        if (visibleChildren.length === 1) {
+          visibleChildren = undefined;
+        }
+      }
+
       return {
         ...item,
         href: href ? `${basePath}${href}` : href,
-        children: item.children?.map((c) => ({
+        children: visibleChildren?.map((c) => ({
           ...c,
           href: `${basePath}${c.href}`,
         })),

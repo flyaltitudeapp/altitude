@@ -3,6 +3,7 @@
 import { MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 
+import { PirepCategoryBadge } from '@/components/pireps/pirep-category-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -76,6 +77,9 @@ export function PirepsTable({
                 Route
               </TableHead>
               <TableHead className="min-w-[100px] bg-muted/50 font-semibold text-foreground">
+                Category
+              </TableHead>
+              <TableHead className="min-w-[100px] bg-muted/50 font-semibold text-foreground">
                 Duration
               </TableHead>
               <TableHead className="min-w-[120px] bg-muted/50 font-semibold text-foreground">
@@ -92,7 +96,7 @@ export function PirepsTable({
               <TableRow>
                 <TableCell
                   className="px-6 py-12 text-center text-foreground"
-                  colSpan={showCheckboxes && onSelectPirep ? 8 : 7}
+                  colSpan={showCheckboxes && onSelectPirep ? 9 : 8}
                 >
                   <div className="flex flex-col items-center gap-2">
                     <p>{emptyMessage}</p>
@@ -154,6 +158,9 @@ export function PirepsTable({
                   </TableCell>
                   <TableCell className="font-medium font-mono text-foreground">
                     {pirep.departureIcao} → {pirep.arrivalIcao}
+                  </TableCell>
+                  <TableCell>
+                    <PirepCategoryBadge category={pirep.category} />
                   </TableCell>
                   <TableCell className="text-foreground">
                     {formatHoursMinutes(pirep.flightTime)}

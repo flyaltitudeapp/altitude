@@ -6,7 +6,7 @@ import { getAllowedAircraftForRank } from '@/db/queries/aircraft';
 import { getAirline } from '@/db/queries/airline';
 import { getMultipliers } from '@/db/queries/multipliers';
 import { getUserRank } from '@/db/queries/ranks';
-import { getFlightTimeForUser } from '@/db/queries/users';
+import { getCareerFlightTimeForUser } from '@/db/queries/users';
 import { authCheck } from '@/lib/auth-check';
 import { parseRolesField } from '@/lib/roles';
 
@@ -31,9 +31,11 @@ export default async function PirepDetailPage({
 
   const { pirep, aircraft, multiplier } = pirepData;
 
-  // Get user's flight time and rank to determine allowed aircraft
-  const userFlightTime = await getFlightTimeForUser(session.user.id);
-  const userRank = await getUserRank(userFlightTime);
+  // Career flight time drives rank, which determines allowed aircraft.
+  const userCareerFlightTime = await getCareerFlightTimeForUser(
+    session.user.id
+  );
+  const userRank = await getUserRank(userCareerFlightTime);
 
   // Get additional data for editing functionality
   const [departureInfo, arrivalInfo, aircraftList, multipliersList, airline] =

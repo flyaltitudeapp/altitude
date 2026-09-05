@@ -7,6 +7,7 @@ export interface PirepData {
   arrival: string;
   flightNumber: string;
   flightTime: number;
+  category: 'casual' | 'career';
   fuel?: number;
   cargo?: number;
   submittedAt: Date;
@@ -40,6 +41,20 @@ export interface RankupData {
   newRank: string;
   totalFlightTime: number;
   achievedAt: Date;
+}
+
+export interface TyperatingChangeData {
+  userId: string;
+  pilotName: string;
+  pilotCallsign: string;
+  action: 'added' | 'removed';
+  typeratingName: string;
+  // The pilot's full list of held type ratings after the change.
+  currentTyperatings: string[];
+  // The staff member who performed the change.
+  actorName: string;
+  actorCallsign?: string;
+  changedAt: Date;
 }
 
 export interface WebhookOptions {

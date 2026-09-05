@@ -26,6 +26,7 @@ export const PILOT_NAV_ITEMS: NavItem[] = [
       'multipliers',
       'routes',
       'ranks',
+      'typeratings',
       'events',
       'users',
       'admin',
@@ -44,20 +45,29 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
     key: 'fleet',
     label: 'Fleet',
     href: '/admin/fleet',
-    roles: ['fleet'],
+    roles: ['fleet', 'routes', 'typeratings'],
+    children: [
+      { key: 'fleet', label: 'Fleet', href: '/admin/fleet', roles: ['fleet'] },
+      {
+        key: 'routes',
+        label: 'Routes',
+        href: '/admin/routes',
+        roles: ['routes'],
+      },
+      {
+        key: 'typeratings',
+        label: 'Type Ratings',
+        href: '/admin/typeratings',
+        roles: ['typeratings'],
+      },
+    ],
   },
-  {
-    key: 'multipliers',
-    label: 'Multipliers',
-    href: '/admin/multipliers',
-    roles: ['multipliers'],
-  },
-  {
-    key: 'routes',
-    label: 'Routes',
-    href: '/admin/routes',
-    roles: ['routes'],
-  },
+  // {
+  //   key: 'multipliers',
+  //   label: 'Multipliers',
+  //   href: '/admin/multipliers',
+  //   roles: ['multipliers'],
+  // },
   {
     key: 'ranks',
     label: 'Ranks',
@@ -77,18 +87,6 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
     roles: ['users'],
   },
   {
-    key: 'inactivity',
-    label: 'Inactivity',
-    href: '/admin/inactivity',
-    roles: ['users'],
-  },
-  {
-    key: 'leave',
-    label: 'Leave',
-    href: '/admin/leave',
-    roles: ['users'],
-  },
-  {
     key: 'users',
     label: 'Users',
     href: '/admin/users',
@@ -100,6 +98,8 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
         label: 'Applications',
         href: '/admin/applications',
       },
+      { key: 'inactivity', label: 'Inactivity', href: '/admin/inactivity' },
+      { key: 'leave', label: 'Leave', href: '/admin/leave' },
     ],
   },
   {

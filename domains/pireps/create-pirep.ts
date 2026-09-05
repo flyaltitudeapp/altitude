@@ -2,9 +2,10 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db';
-import { getAllowedAircraftForRank, getUserRank } from '@/db/queries';
+import { getUserRank } from '@/db/queries';
 import { getMultiplierValue } from '@/db/queries/multipliers';
-import { getFlightTimeForUser } from '@/db/queries/users';
+import { getTyperatedAircraftForUser } from '@/db/queries/typeratings';
+import { getCareerFlightTimeForUser } from '@/db/queries/users';
 import { aircraft, airline, pireps, users } from '@/db/schema';
 import { MAX_CARGO_KG, MAX_FUEL_KG, MAX_PASSENGERS } from '@/lib/constants';
 import { formatHoursMinutes } from '@/lib/utils';
@@ -64,6 +65,9 @@ const _createPirepSchema = z.object({
     .string()
     .max(200, 'Comments must be at most 200 characters')
     .optional(),
+  category: z.enum(['casual', 'career'], {
+    message: 'Please select a flight category',
+  }),
 });
 
 type CreatePirepData = z.infer<typeof _createPirepSchema>;
@@ -84,8 +88,8 @@ async function validateFlightTimeLimit(
   userId: string,
   flightTime: number
 ): Promise<void> {
-  const currentFlightTime = await getFlightTimeForUser(userId);
-  const rank = await getUserRank(currentFlightTime);
+  const currentCareerFlightTime = await getCareerFlightTimeForUser(userId);
+  const rank = await getUserRank(currentCareerFlightTime);
 
   // If no rank exists, no flight time restrictions apply
   if (!rank) {
@@ -103,18 +107,19 @@ async function validateFlightTimeLimit(
 
 async function validateAircraftPermission(
   userId: string,
-  aircraftId: string
+  aircraftId: string,
+  category: 'casual' | 'career'
 ): Promise<void> {
-  const currentFlightTime = await getFlightTimeForUser(userId);
-  const rank = await getUserRank(currentFlightTime);
-
-  // If no rank exists, allow all aircraft
-  if (!rank) {
+  // Casual flying is unrestricted.
+  if (category === 'casual') {
     return;
   }
 
-  const allowedAircraft = await getAllowedAircraftForRank(rank.id);
-  const isAircraftAllowed = allowedAircraft.some((ac) => ac.id === aircraftId);
+  // Career flying is restricted to aircraft covered by the pilot's typeratings.
+  const typeratedAircraft = await getTyperatedAircraftForUser(userId);
+  const isAircraftAllowed = typeratedAircraft.some(
+    (ac) => ac.id === aircraftId
+  );
 
   if (!isAircraftAllowed) {
     const aircraftData = await db
@@ -127,7 +132,7 @@ async function validateAircraftPermission(
       ? `${aircraftData.name} (${aircraftData.livery})`
       : 'Unknown Aircraft';
     throw new Error(
-      `You are not authorized to fly ${aircraftName} with your current rank (${rank.name}).`
+      `You are not type rated for ${aircraftName}. Career PIREPs can only be filed for aircraft covered by your type ratings.`
     );
   }
 }
@@ -157,6 +162,7 @@ async function createPirepRecord(
       deniedReason: '',
       userId,
       status: 'pending',
+      category: data.category,
       createdAt: new Date(),
       updatedAt: new Date(),
     })
@@ -213,6 +219,7 @@ export async function sendPirepWebhookNotification(
       arrival: pirepData.arrivalIcao.toUpperCase(),
       flightNumber: pirepData.flightNumber,
       flightTime: adjustedFlightTime,
+      category: pirepData.category,
       fuel: pirepData.fuelBurned,
       cargo: pirepData.cargo,
       submittedAt: new Date(),
@@ -237,7 +244,7 @@ export async function createPirep(data: CreatePirepData, userId: string) {
 
   await validateFlightTimeLimit(userId, data.flightTime);
 
-  await validateAircraftPermission(userId, data.aircraftId);
+  await validateAircraftPermission(userId, data.aircraftId, data.category);
 
   const newPirep = await createPirepRecord(data, adjustedFlightTime, userId);
 

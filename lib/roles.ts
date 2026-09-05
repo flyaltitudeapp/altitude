@@ -6,6 +6,7 @@ export const AVAILABLE_ROLES = [
   'users',
   'multipliers',
   'ranks',
+  'typeratings',
 ] as const;
 
 export type Role = (typeof AVAILABLE_ROLES)[number];

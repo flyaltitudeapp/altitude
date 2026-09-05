@@ -255,7 +255,7 @@ export default function RouteForm({
                         .toUpperCase();
                       field.onChange(value);
                     }}
-                    placeholder="KJFK"
+                    placeholder="KSFO"
                   />
                 </FormControl>
                 <FormMessage />

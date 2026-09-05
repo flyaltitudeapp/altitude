@@ -6,6 +6,7 @@ interface Rank {
   id: string;
   name: string;
   minimumFlightTime: number;
+  typeRatingSlots: number;
   createdAt: string | Date;
 }
 

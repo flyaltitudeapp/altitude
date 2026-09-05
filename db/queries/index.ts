@@ -9,4 +9,5 @@ export * from './multipliers';
 export * from './pireps';
 export * from './ranks';
 export * from './routes';
+export * from './typeratings';
 export * from './users';

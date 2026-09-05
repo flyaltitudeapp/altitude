@@ -51,6 +51,7 @@ const updateAirlineSchema = z
     rankUpWebhookUrl: discordWebhookSchema,
     leaveRequestWebhookUrl: discordWebhookSchema,
     inactivityWebhookUrl: discordWebhookSchema,
+    typeRatingWebhookUrl: discordWebhookSchema,
     inactivityPeriod: z
       .number()
       .int('Inactivity period must be an integer')
@@ -99,6 +100,7 @@ export const updateAirlineAction = createRoleActionClient(['admin'])
       rankUpWebhookUrl,
       leaveRequestWebhookUrl,
       inactivityWebhookUrl,
+      typeRatingWebhookUrl,
       inactivityPeriod,
       callsignMinRange,
       callsignMaxRange,
@@ -118,6 +120,7 @@ export const updateAirlineAction = createRoleActionClient(['admin'])
         rankUpWebhookUrl,
         leaveRequestWebhookUrl,
         inactivityWebhookUrl,
+        typeRatingWebhookUrl,
         inactivityPeriod,
         callsignMinRange,
         callsignMaxRange,

@@ -1,0 +1,1 @@
+ALTER TABLE `airline` ADD `type_rating_webhook_url` text;

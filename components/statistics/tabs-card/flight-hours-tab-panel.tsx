@@ -4,6 +4,7 @@ import React, { useMemo, useRef } from 'react';
 
 import { FlightsChart } from '@/components/charts/flights-chart';
 import { getPeriodLabel } from '@/lib/chart-utils';
+import { formatHoursMinutes } from '@/lib/utils';
 import type { FlightHoursStatistics, TimePeriod } from '@/types/statistics';
 
 interface FlightHoursTabPanelProps {
@@ -29,6 +30,8 @@ export const FlightHoursTabPanel = ({
       ? lastData.current.hoursTrend.map((d) => ({
           ...d,
           totalPireps: d.totalFlightTime / 60,
+          // Render career hours on the same decimal-hours scale as the primary area.
+          careerFlightTime: d.careerFlightTime / 60,
         }))
       : [];
 
@@ -53,8 +56,14 @@ export const FlightHoursTabPanel = ({
       loading={false}
       height={320}
       title="Flight Hours"
-      description={`Daily flight hours over ${getPeriodLabel(period, customDays)}`}
+      description={`Total vs career flight hours over ${getPeriodLabel(period, customDays)}`}
       tooltipMetric="totalFlightTime"
+      secondarySeries={{
+        dataKey: 'careerFlightTime',
+        label: 'Career Hours',
+        // chartData stores career hours as a decimal; convert back to minutes for the label.
+        formatValue: (v) => formatHoursMinutes(v * 60),
+      }}
       customDays={customDays}
     />
   );

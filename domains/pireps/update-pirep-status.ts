@@ -2,7 +2,7 @@ import { eq, inArray } from 'drizzle-orm';
 
 import { db } from '@/db';
 import { logPirepEvent } from '@/db/queries/pireps';
-import { getFlightTimeForUser } from '@/db/queries/users';
+import { getCareerFlightTimeForUser } from '@/db/queries/users';
 import { pireps } from '@/db/schema';
 import { maybeScheduleRankup } from '@/lib/rankup-trigger';
 
@@ -56,6 +56,7 @@ export async function updatePirepStatus(
       userId: pireps.userId,
       flightTime: pireps.flightTime,
       status: pireps.status,
+      category: pireps.category,
       deniedReason: pireps.deniedReason,
     })
     .from(pireps)
@@ -87,12 +88,16 @@ export async function updatePirepStatus(
     newValues
   );
 
-  if (newStatus === 'approved' && pirepData.status !== 'approved') {
-    const totalFlightTime = await getFlightTimeForUser(pirepData.userId);
+  if (
+    newStatus === 'approved' &&
+    pirepData.status !== 'approved' &&
+    pirepData.category === 'career'
+  ) {
+    const careerFlightTime = await getCareerFlightTimeForUser(pirepData.userId);
     maybeScheduleRankup(
       pirepData.userId,
-      totalFlightTime - pirepData.flightTime,
-      totalFlightTime
+      careerFlightTime - pirepData.flightTime,
+      careerFlightTime
     );
   }
 
@@ -113,6 +118,7 @@ export async function updateBulkPirepStatus(
       userId: pireps.userId,
       flightTime: pireps.flightTime,
       status: pireps.status,
+      category: pireps.category,
       deniedReason: pireps.deniedReason,
     })
     .from(pireps)
@@ -148,13 +154,15 @@ export async function updateBulkPirepStatus(
       newValues
     );
 
-    // Schedule rankup for approved PIREPs that weren't already approved
-    if (pirepData.status !== 'approved') {
-      const totalFlightTime = await getFlightTimeForUser(pirepData.userId);
+    // Schedule rankup for newly-approved career PIREPs only
+    if (pirepData.status !== 'approved' && pirepData.category === 'career') {
+      const careerFlightTime = await getCareerFlightTimeForUser(
+        pirepData.userId
+      );
       maybeScheduleRankup(
         pirepData.userId,
-        totalFlightTime - pirepData.flightTime,
-        totalFlightTime
+        careerFlightTime - pirepData.flightTime,
+        careerFlightTime
       );
     }
   }

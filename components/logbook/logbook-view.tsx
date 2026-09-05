@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { fetchUserPirepsAction } from '@/actions/logbook/search-pireps';
 import { ActiveFilters } from '@/components/logbook/active-filters';
 import { PirepFiltersBar } from '@/components/logbook/pirep-filters-bar';
+import { PirepCategoryBadge } from '@/components/pireps/pirep-category-badge';
 import { Button } from '@/components/ui/button';
 import { DataPagination } from '@/components/ui/data-pagination';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -156,6 +157,9 @@ export function LogbookView({
                   Flight Time
                 </TableHead>
                 <TableHead className="bg-muted/50 font-semibold text-foreground">
+                  Category
+                </TableHead>
+                <TableHead className="bg-muted/50 font-semibold text-foreground">
                   Status
                 </TableHead>
                 <TableHead className="w-[50px] bg-muted/50" />
@@ -166,7 +170,7 @@ export function LogbookView({
                 <TableRow>
                   <TableCell
                     className="px-6 py-12 text-center text-foreground"
-                    colSpan={5}
+                    colSpan={6}
                   >
                     <div className="flex flex-col items-center gap-2">
                       {/* TODO: Add a plane icon from phospor icons */}
@@ -200,6 +204,9 @@ export function LogbookView({
                       </TableCell>
                       <TableCell className="text-foreground">
                         {formatHoursMinutes(flight.flightTime)}
+                      </TableCell>
+                      <TableCell>
+                        <PirepCategoryBadge category={flight.category} />
                       </TableCell>
                       <TableCell>
                         <StatusBadge status={flight.status} />

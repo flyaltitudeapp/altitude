@@ -29,6 +29,7 @@ export type PirepFilterField =
   | 'cargo'
   | 'fuelBurned'
   | 'status'
+  | 'category'
   | 'date';
 
 export interface PirepFilterCondition extends FilterCondition {
@@ -48,6 +49,23 @@ async function getTotalFlightsNumber(
     .get();
 
   return { totalFlights: row?.totalFlights ?? 0 };
+}
+
+async function getCareerPirepCountForUser(
+  userId: string
+): Promise<{ careerFlights: number }> {
+  const row = await db
+    .select({
+      careerFlights:
+        sql<number>`COUNT(CASE WHEN ${pireps.category} = 'career' THEN 1 END)`.as(
+          'careerFlights'
+        ),
+    })
+    .from(pireps)
+    .where(eq(pireps.userId, userId))
+    .get();
+
+  return { careerFlights: row?.careerFlights ?? 0 };
 }
 
 async function getUserLastFlights(userId: string): Promise<Pirep[]> {
@@ -172,7 +190,8 @@ const buildStringCondition = (
     | typeof pireps.flightNumber
     | typeof pireps.departureIcao
     | typeof pireps.arrivalIcao
-    | typeof pireps.status,
+    | typeof pireps.status
+    | typeof pireps.category,
   operator: FilterOperator,
   value: string | number | undefined
 ): SQL<boolean> => {
@@ -265,6 +284,8 @@ const buildFieldCondition = (condition: PirepFilterCondition): SQL<boolean> => {
       return buildStringCondition(pireps.arrivalIcao, operator, value);
     case 'status':
       return buildStringCondition(pireps.status, operator, value);
+    case 'category':
+      return buildStringCondition(pireps.category, operator, value);
     case 'aircraftId':
       return sql<boolean>`${pireps.aircraftId} = ${String(value || '')}`;
     case 'flightTime':
@@ -417,6 +438,7 @@ async function resolveMultiplierNames(
 
 export {
   countPirepsByAircraft,
+  getCareerPirepCountForUser,
   getPirepById,
   getPirepsByStatusWithUsers,
   getPirepsPaginated,

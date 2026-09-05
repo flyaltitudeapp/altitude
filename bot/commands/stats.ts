@@ -12,6 +12,8 @@ import {
 
 import { findUserByDiscord } from '@/bot/utils/user-lookup';
 import {
+  getCareerFlightTimeForUser,
+  getCareerPirepCountForUser,
   getFlightTimeForUser,
   getRankProgression,
   getTotalFlightsNumber,
@@ -80,16 +82,19 @@ export async function handleButton(interaction: ButtonInteraction) {
 
     if (buttonType === 'general') {
       const flightTime = await getFlightTimeForUser(user.id);
+      const careerFlightTime = await getCareerFlightTimeForUser(user.id);
       const totalFlightsData = await getTotalFlightsNumber(user.id);
       const totalFlights = totalFlightsData.totalFlights;
-      const rankProgression = await getRankProgression(flightTime);
+      const { careerFlights } = await getCareerPirepCountForUser(user.id);
+      const rankProgression = await getRankProgression(careerFlightTime);
       const airlineCallsign = airlineData?.callsign;
       const fullCallsign = formatFullCallsign(airlineCallsign!, user.callsign!);
 
       const lines = [
         `👨‍✈️ **Pilot:** ${user.name} (\`${fullCallsign}\`)`,
-        `⏱️ **Flight Time:** ${formatHoursMinutes(flightTime)}`,
-        `📋 **Total PIREPs:** ${totalFlights}`,
+        `⏱️ **Total Hours:** ${formatHoursMinutes(flightTime)}`,
+        `🏷️ **Career Hours:** ${formatHoursMinutes(careerFlightTime)}`,
+        `📋 **Total PIREPs:** ${totalFlights} (${careerFlights} career)`,
         `🎖️ **Current Rank:** ${rankProgression.currentRank?.name ?? 'N/A'}`,
       ];
 
@@ -98,13 +103,13 @@ export async function handleButton(interaction: ButtonInteraction) {
         const hoursToNextFormatted = formatHoursMinutes(
           Math.round(hoursToNext * 60)
         );
-        const currentHours = flightTime / 60;
+        const currentCareerHours = careerFlightTime / 60;
         const targetHours = rankProgression.nextRank.minimumFlightTime;
-        const progressBar = createProgressBar(currentHours, targetHours);
+        const progressBar = createProgressBar(currentCareerHours, targetHours);
 
         lines.push(
           `🎯 **Next Rank:** ${rankProgression.nextRank.name}`,
-          `📊 **Progress:** ${progressBar} (${hoursToNextFormatted} more needed)`
+          `📊 **Progress:** ${progressBar} (${hoursToNextFormatted} more career hours needed)`
         );
       } else {
         lines.push(`🏆 **Status:** Maximum rank achieved!`);
@@ -253,15 +258,18 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const airlineName = airlineData?.name;
 
     const flightTime = await getFlightTimeForUser(user.id);
+    const careerFlightTime = await getCareerFlightTimeForUser(user.id);
     const totalFlightsData = await getTotalFlightsNumber(user.id);
     const totalFlights = totalFlightsData.totalFlights;
-    const rankProgression = await getRankProgression(flightTime);
+    const { careerFlights } = await getCareerPirepCountForUser(user.id);
+    const rankProgression = await getRankProgression(careerFlightTime);
     const fullCallsign = formatFullCallsign(airlineCallsign!, user.callsign!);
 
     const lines = [
       `👨‍✈️ **Pilot:** ${user.name} (\`${fullCallsign}\`)`,
-      `⏱️ **Flight Time:** ${formatHoursMinutes(flightTime)}`,
-      `📋 **Total PIREPs:** ${totalFlights}`,
+      `⏱️ **Total Hours:** ${formatHoursMinutes(flightTime)}`,
+      `🏷️ **Career Hours:** ${formatHoursMinutes(careerFlightTime)}`,
+      `📋 **Total PIREPs:** ${totalFlights} (${careerFlights} career)`,
       `🎖️ **Current Rank:** ${rankProgression.currentRank?.name ?? 'N/A'}`,
     ];
 
@@ -270,13 +278,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       const hoursToNextFormatted = formatHoursMinutes(
         Math.round(hoursToNext * 60)
       );
-      const currentHours = flightTime / 60;
+      const currentCareerHours = careerFlightTime / 60;
       const targetHours = rankProgression.nextRank.minimumFlightTime;
-      const progressBar = createProgressBar(currentHours, targetHours);
+      const progressBar = createProgressBar(currentCareerHours, targetHours);
 
       lines.push(
         `🎯 **Next Rank:** ${rankProgression.nextRank.name}`,
-        `📊 **Progress:** ${progressBar} (${hoursToNextFormatted} more needed)`
+        `📊 **Progress:** ${progressBar} (${hoursToNextFormatted} more career hours needed)`
       );
     } else {
       lines.push(`🏆 **Status:** Maximum rank achieved!`);

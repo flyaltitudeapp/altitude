@@ -1,3 +1,4 @@
+import { PirepCategoryBadge } from '@/components/pireps/pirep-category-badge';
 import { StatusBadge } from '@/components/ui/status-badge';
 import type { Pirep } from '@/db/schema';
 import { formatHoursMinutes } from '@/lib/utils';
@@ -46,7 +47,8 @@ export function UserFlights({ flights, userName }: UserFlightsProps) {
                     {formatHoursMinutes(flight.flightTime)}
                   </div>
                 </div>
-                <div className="flex-shrink-0">
+                <div className="flex flex-shrink-0 items-center gap-2">
+                  <PirepCategoryBadge category={flight.category} />
                   <StatusBadge status={flight.status} />
                 </div>
               </div>

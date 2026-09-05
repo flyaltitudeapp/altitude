@@ -23,6 +23,7 @@ import type {
   PirepFilterField,
 } from '@/db/queries/pireps';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { CATEGORY_OPTIONS, STATUS_OPTIONS } from '@/lib/pireps/constants';
 import { convertMinutesToTime, convertTimeToMinutes } from '@/lib/utils';
 import type { FilterOperator } from '@/types/database';
 
@@ -52,6 +53,7 @@ const FIELD_LABELS: Record<PirepFilterField, string> = {
   cargo: 'Cargo',
   fuelBurned: 'Fuel Burned',
   status: 'Status',
+  category: 'Category',
   date: 'Date',
 };
 
@@ -69,12 +71,6 @@ const OPERATOR_LABELS: Record<FilterOperator, string> = {
   after: 'after',
 };
 
-const STATUS_OPTIONS = [
-  { value: 'pending', label: 'Pending' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'denied', label: 'Denied' },
-];
-
 const FIELD_MAX_LENGTHS: Partial<Record<PirepFilterField, number>> = {
   flightNumber: 8,
   departureIcao: 4,
@@ -84,6 +80,7 @@ const FIELD_MAX_LENGTHS: Partial<Record<PirepFilterField, number>> = {
   flightTime: 5, // hh:mm
   date: 10, // yyyy-mm-dd
   status: 8,
+  category: 8,
   aircraftId: 36, // uuid length
 };
 
@@ -108,6 +105,7 @@ const getOperatorsForField = (field: PirepFilterField): FilterOperator[] => {
       ];
     case 'aircraftId':
     case 'status':
+    case 'category':
       return ['is', 'is_not'];
     case 'date':
       return ['is', 'before', 'after'];
@@ -250,6 +248,10 @@ export function PirepFiltersBar({
     if (filter.field === 'status' && filter.value) {
       const status = STATUS_OPTIONS.find((s) => s.value === filter.value);
       return status?.label || filter.value.toString();
+    }
+    if (filter.field === 'category' && filter.value) {
+      const category = CATEGORY_OPTIONS.find((c) => c.value === filter.value);
+      return category?.label || filter.value.toString();
     }
     if (filter.field === 'flightTime' && typeof filter.value === 'number') {
       return convertMinutesToTime(filter.value);
@@ -478,7 +480,7 @@ function FilterEditor({
         return 'HH:MM (e.g., 01:30)';
       case 'departureIcao':
       case 'arrivalIcao':
-        return 'e.g., LFPG';
+        return 'e.g., KEWR';
       case 'cargo':
         return 'Weight in kg';
       case 'fuelBurned':
@@ -566,6 +568,22 @@ function FilterEditor({
                 {STATUS_OPTIONS.map((status) => (
                   <SelectItem key={status.value} value={status.value}>
                     {status.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : localFilter.field === 'category' ? (
+            <Select
+              value={localFilter.value?.toString() || ''}
+              onValueChange={(value) => updateFilter({ value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select category..." />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORY_OPTIONS.map((category) => (
+                  <SelectItem key={category.value} value={category.value}>
+                    {category.label}
                   </SelectItem>
                 ))}
               </SelectContent>

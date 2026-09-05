@@ -8,6 +8,7 @@ export type NavItem = {
     label: string;
     href: string;
     prefetch?: boolean;
+    roles?: string[];
   }>;
 };
 

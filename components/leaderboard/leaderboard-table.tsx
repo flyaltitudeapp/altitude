@@ -16,7 +16,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserAvatar } from '@/components/ui/user-avatar';
 import { formatHoursMinutes } from '@/lib/utils';
 
-interface FlightTimeLeaderboard {
+interface FlightTimeLeaderboardRow {
   pilotId: string;
   pilotName: string;
   pilotImage: string | null;
@@ -24,32 +24,43 @@ interface FlightTimeLeaderboard {
   totalApprovedFlights: number;
 }
 
-interface PirepsLeaderboard {
+interface PirepsLeaderboardRow {
   pilotId: string;
   pilotName: string;
   pilotImage: string | null;
   totalApprovedFlights: number;
   totalFlightTime: number;
+}
+
+type TimePeriod = 'all' | 30 | 7;
+
+interface CategoryBuckets {
+  flightTime: Record<TimePeriod, FlightTimeLeaderboardRow[]>;
+  pireps: Record<TimePeriod, PirepsLeaderboardRow[]>;
 }
 
 interface LeaderboardTableProps {
-  flightTimeLeaderboard: {
-    [key in 'all' | 30 | 7]: FlightTimeLeaderboard[];
-  };
-  pirepsLeaderboard: {
-    [key in 'all' | 30 | 7]: PirepsLeaderboard[];
+  leaderboards: {
+    overall: CategoryBuckets;
+    career: CategoryBuckets;
   };
   canViewUsers?: boolean;
 }
 
 type LeaderboardType = 'flightTime' | 'pireps';
-type TimePeriod = 'all' | 30 | 7;
+type LeaderboardCategoryTab = 'overall' | 'career';
+
+const EMPTY_LABELS: Record<LeaderboardCategoryTab, string> = {
+  overall: 'No approved flights recorded for this period',
+  career: 'No approved career flights recorded for this period',
+};
 
 export function LeaderboardTable({
-  flightTimeLeaderboard,
-  pirepsLeaderboard,
+  leaderboards,
   canViewUsers = false,
 }: LeaderboardTableProps) {
+  const [selectedCategory, setSelectedCategory] =
+    useState<LeaderboardCategoryTab>('overall');
   const [selectedType, setSelectedType] =
     useState<LeaderboardType>('flightTime');
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>(30);
@@ -68,8 +79,9 @@ export function LeaderboardTable({
   };
 
   const renderGenericTable = (
-    leaderboard: (FlightTimeLeaderboard | PirepsLeaderboard)[],
-    type: LeaderboardType
+    leaderboard: (FlightTimeLeaderboardRow | PirepsLeaderboardRow)[],
+    type: LeaderboardType,
+    category: LeaderboardCategoryTab
   ) => (
     <div className="overflow-hidden rounded-md border border-border bg-panel shadow-sm">
       <div className="overflow-x-auto">
@@ -98,7 +110,7 @@ export function LeaderboardTable({
                     <Trophy className="h-8 w-8 text-muted-foreground" />
                     <p className="font-medium text-lg">No pilots found</p>
                     <p className="text-muted-foreground text-sm">
-                      No approved flights recorded for this period
+                      {EMPTY_LABELS[category]}
                     </p>
                   </div>
                 </TableCell>
@@ -159,46 +171,65 @@ export function LeaderboardTable({
     </div>
   );
 
-  const getCurrentData = () => {
-    if (selectedType === 'flightTime') {
-      return flightTimeLeaderboard[selectedPeriod];
-    } else {
-      return pirepsLeaderboard[selectedPeriod];
-    }
-  };
+  const buckets = leaderboards[selectedCategory];
+  const currentData =
+    selectedType === 'flightTime'
+      ? buckets.flightTime[selectedPeriod]
+      : buckets.pireps[selectedPeriod];
 
   return (
     <div className="w-full">
-      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="mb-4 flex flex-col gap-2">
         <Tabs
-          value={selectedType}
-          onValueChange={(value) => setSelectedType(value as LeaderboardType)}
+          value={selectedCategory}
+          onValueChange={(value) =>
+            setSelectedCategory(value as LeaderboardCategoryTab)
+          }
         >
           <TabsList className="w-full sm:w-auto">
-            <TabsTrigger value="flightTime" className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Flight Time
-            </TabsTrigger>
-            <TabsTrigger value="pireps" className="flex items-center gap-2">
-              <Award className="h-4 w-4" />
-              PIREPs
-            </TabsTrigger>
+            <TabsTrigger value="overall">Overall</TabsTrigger>
+            <TabsTrigger value="career">Career</TabsTrigger>
           </TabsList>
         </Tabs>
 
-        <Tabs
-          value={selectedPeriod.toString()}
-          onValueChange={(value) => setSelectedPeriod(value as TimePeriod)}
-        >
-          <TabsList className="w-full sm:w-auto">
-            <TabsTrigger value="all">All Time</TabsTrigger>
-            <TabsTrigger value="30">30 Days</TabsTrigger>
-            <TabsTrigger value="7">7 Days</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Tabs
+            value={selectedType}
+            onValueChange={(value) => setSelectedType(value as LeaderboardType)}
+          >
+            <TabsList className="w-full sm:w-auto">
+              <TabsTrigger
+                value="flightTime"
+                className="flex items-center gap-2"
+              >
+                <Clock className="h-4 w-4" />
+                Flight Time
+              </TabsTrigger>
+              <TabsTrigger value="pireps" className="flex items-center gap-2">
+                <Award className="h-4 w-4" />
+                PIREPs
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          <Tabs
+            value={selectedPeriod.toString()}
+            onValueChange={(value) =>
+              setSelectedPeriod(
+                value === 'all' ? 'all' : (Number(value) as TimePeriod)
+              )
+            }
+          >
+            <TabsList className="w-full sm:w-auto">
+              <TabsTrigger value="all">All Time</TabsTrigger>
+              <TabsTrigger value="30">30 Days</TabsTrigger>
+              <TabsTrigger value="7">7 Days</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
       </div>
 
-      {renderGenericTable(getCurrentData(), selectedType)}
+      {renderGenericTable(currentData, selectedType, selectedCategory)}
     </div>
   );
 }

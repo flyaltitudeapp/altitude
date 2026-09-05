@@ -26,6 +26,7 @@ export async function sendPirepWebhook(
     `👨‍✈️ **Pilot:** ${pirepData.pilotName} (\`${fullCallsign}\`)`,
     `✈️ **Aircraft:** ${pirepData.aircraft}`,
     `⏱️ **Flight Time:** ${formatHoursMinutes(pirepData.flightTime)}`,
+    `🏷️ **Category:** ${pirepData.category === 'career' ? 'Career' : 'Casual'}`,
   ];
 
   if (pirepData.fuel !== undefined) {

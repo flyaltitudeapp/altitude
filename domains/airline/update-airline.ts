@@ -13,6 +13,7 @@ export interface AirlineUpdateData {
   rankUpWebhookUrl?: string | null;
   leaveRequestWebhookUrl?: string | null;
   inactivityWebhookUrl?: string | null;
+  typeRatingWebhookUrl?: string | null;
   inactivityPeriod?: number;
   callsignMinRange?: number;
   callsignMaxRange?: number;
@@ -72,6 +73,9 @@ export async function updateAirlineRecord(
   }
   if (data.inactivityWebhookUrl !== undefined) {
     updateData.inactivityWebhookUrl = data.inactivityWebhookUrl || null;
+  }
+  if (data.typeRatingWebhookUrl !== undefined) {
+    updateData.typeRatingWebhookUrl = data.typeRatingWebhookUrl || null;
   }
   if (data.inactivityPeriod !== undefined) {
     updateData.inactivityPeriod = data.inactivityPeriod;

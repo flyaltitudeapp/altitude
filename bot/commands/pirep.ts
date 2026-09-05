@@ -41,7 +41,7 @@ export async function getPirepCommandData() {
     .addStringOption((option) =>
       option
         .setName('departure')
-        .setDescription('Departure airport ICAO (e.g., KJFK)')
+        .setDescription('Departure airport ICAO (e.g., KSFO)')
         .setRequired(true)
     )
     .addStringOption((option) =>
@@ -85,6 +85,16 @@ export async function getPirepCommandData() {
         .setDescription('Select multiplier (optional)')
         .setRequired(false)
         .addChoices(...multiplierChoices)
+    )
+    .addStringOption((option) =>
+      option
+        .setName('category')
+        .setDescription('Flight category')
+        .setRequired(true)
+        .addChoices(
+          { name: 'Casual', value: 'casual' },
+          { name: 'Career', value: 'career' }
+        )
     );
 }
 
@@ -114,11 +124,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const fuel = interaction.options.getInteger('fuel', true);
     const aircraftId = interaction.options.getString('aircraft', true);
     const multiplierId = interaction.options.getString('multiplier');
+    const category = interaction.options.getString('category', true) as
+      | 'casual'
+      | 'career';
 
     const icaoRegex = /^[A-Z]{4}$/;
     if (!icaoRegex.test(departure) || !icaoRegex.test(arrival)) {
       await interaction.editReply(
-        '❌ ICAO codes must be exactly 4 uppercase letters (e.g., KJFK, EGLL)'
+        '❌ ICAO codes must be exactly 4 uppercase letters (e.g., KSFO, EGLL)'
       );
       return;
     }
@@ -153,6 +166,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       aircraftId: aircraft.id,
       multiplierId:
         multiplierId === 'none' || !multiplierId ? undefined : multiplierId,
+      category,
     };
 
     const { newPirep, adjustedFlightTime } = await createPirep(

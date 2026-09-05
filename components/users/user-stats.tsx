@@ -11,7 +11,9 @@ interface UserStatsProps {
     discordUsername?: string | null;
   };
   pirepCount: number;
+  careerPirepCount: number;
   flightTime: number;
+  careerFlightTime: number;
   lastPirepDate: Date | string | null;
   airlinePrefix: string;
   callsignMinRange: number;
@@ -34,7 +36,9 @@ function formatDate(date: Date | string | null | undefined) {
 export function UserStats({
   user,
   pirepCount,
+  careerPirepCount,
   flightTime,
+  careerFlightTime,
   lastPirepDate,
   airlinePrefix,
   callsignMinRange,
@@ -77,7 +81,7 @@ export function UserStats({
 
           <div className="min-w-0">
             <p className="text-sm font-medium text-muted-foreground">
-              Flight Time
+              Total Hours
             </p>
             <p className="text-base font-medium mt-2 truncate">
               {formatHoursMinutes(flightTime)}
@@ -86,9 +90,25 @@ export function UserStats({
 
           <div className="min-w-0">
             <p className="text-sm font-medium text-muted-foreground">
+              Career Hours
+            </p>
+            <p className="text-base font-medium mt-2 truncate">
+              {formatHoursMinutes(careerFlightTime)}
+            </p>
+          </div>
+
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-muted-foreground">
               Total PIREPs
             </p>
             <p className="text-base font-medium mt-2">{pirepCount}</p>
+          </div>
+
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-muted-foreground">
+              Career PIREPs
+            </p>
+            <p className="text-base font-medium mt-2">{careerPirepCount}</p>
           </div>
 
           <div className="min-w-0">
@@ -109,7 +129,7 @@ export function UserStats({
         </div>
 
         {/* Desktop layout: Inline */}
-        <div className="hidden lg:grid lg:grid-cols-6 lg:gap-6">
+        <div className="hidden lg:grid lg:grid-cols-8 lg:gap-6">
           <div className="min-w-0">
             <p className="text-sm font-medium text-muted-foreground">
               Callsign
@@ -142,7 +162,7 @@ export function UserStats({
 
           <div className="min-w-0">
             <p className="text-sm font-medium text-muted-foreground">
-              Flight Time
+              Total Hours
             </p>
             <p className="text-base font-medium mt-2 truncate">
               {formatHoursMinutes(flightTime)}
@@ -151,9 +171,25 @@ export function UserStats({
 
           <div className="min-w-0">
             <p className="text-sm font-medium text-muted-foreground">
+              Career Hours
+            </p>
+            <p className="text-base font-medium mt-2 truncate">
+              {formatHoursMinutes(careerFlightTime)}
+            </p>
+          </div>
+
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-muted-foreground">
               Total PIREPs
             </p>
             <p className="text-base font-medium mt-2">{pirepCount}</p>
+          </div>
+
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-muted-foreground">
+              Career PIREPs
+            </p>
+            <p className="text-base font-medium mt-2">{careerPirepCount}</p>
           </div>
 
           <div className="min-w-0">

@@ -149,12 +149,16 @@ export function LoginForm({
               <img
                 src={lightLogo}
                 alt="Logo (light)"
-                className="h-12 w-12 object-contain block dark:hidden"
+                width="auto"
+                height={32}
+                className="h-8 w-auto object-contain block dark:hidden"
               />
               <img
                 src={darkLogo}
                 alt="Logo (dark)"
-                className="h-12 w-12 object-contain hidden dark:block"
+                width="auto"
+                height={32}
+                className="h-8 w-auto object-contain hidden dark:block"
               />
             </div>
             <h1 className="mb-4 text-center font-bold text-3xl text-foreground">
@@ -311,12 +315,16 @@ export function LoginForm({
                   <img
                     src={lightLogo}
                     alt="Logo (light)"
-                    className="h-12 w-12 object-contain block dark:hidden"
+                    width="auto"
+                    height={32}
+                    className="h-8 w-auto object-contain block dark:hidden"
                   />
                   <img
                     src={darkLogo}
                     alt="Logo (dark)"
-                    className="h-12 w-12 object-contain hidden dark:block"
+                    width="auto"
+                    height={32}
+                    className="h-8 w-auto object-contain hidden dark:block"
                   />
                 </div>
                 <h1 className="text-3xl font-bold mb-2">

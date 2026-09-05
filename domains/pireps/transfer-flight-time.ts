@@ -2,8 +2,9 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '@/db';
-import { getFlightTimeForUser } from '@/db/queries/users';
+import { getCareerFlightTimeForUser } from '@/db/queries/users';
 import { pireps, users } from '@/db/schema';
+import { PIREP_CATEGORIES } from '@/lib/pireps/constants';
 import { maybeScheduleRankup } from '@/lib/rankup-trigger';
 
 const _transferFlightTimeSchema = z.object({
@@ -16,13 +17,14 @@ const _transferFlightTimeSchema = z.object({
     .number()
     .min(0, 'Minutes must be non-negative')
     .max(59, 'Minutes must be at most 59'),
+  category: z.enum(PIREP_CATEGORIES),
   performedByUserId: z.string().min(1, 'Performed by user ID is required'),
 });
 
 type TransferFlightTimeData = z.infer<typeof _transferFlightTimeSchema>;
 
 export async function transferFlightTime(data: TransferFlightTimeData) {
-  const { targetUserId, hours, minutes, performedByUserId } = data;
+  const { targetUserId, hours, minutes, category, performedByUserId } = data;
 
   const targetUser = await db
     .select({ id: users.id, name: users.name })
@@ -70,17 +72,20 @@ export async function transferFlightTime(data: TransferFlightTimeData) {
       deniedReason: '',
       userId: targetUserId,
       status: 'approved',
+      category,
       createdAt: now,
       updatedAt: now,
     })
     .returning();
 
-  const totalFlightTime = await getFlightTimeForUser(targetUserId);
-  maybeScheduleRankup(
-    targetUserId,
-    totalFlightTime - totalMinutes,
-    totalFlightTime
-  );
+  if (category === 'career') {
+    const newCareerFlightTime = await getCareerFlightTimeForUser(targetUserId);
+    maybeScheduleRankup(
+      targetUserId,
+      newCareerFlightTime - totalMinutes,
+      newCareerFlightTime
+    );
+  }
 
   return { newPirep, totalMinutes };
 }

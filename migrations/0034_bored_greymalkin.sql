@@ -1,0 +1,1 @@
+ALTER TABLE `typeratings` ADD `image` text;

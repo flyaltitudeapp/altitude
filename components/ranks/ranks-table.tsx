@@ -48,6 +48,7 @@ interface Rank {
   name: string;
   minimumFlightTime: number;
   maximumFlightTime?: number | null;
+  typeRatingSlots: number;
   createdAt: string | Date;
 }
 
@@ -226,7 +227,10 @@ export function RanksTable({ ranks, total, limit = 10 }: RanksTableProps) {
                 Rank Name
               </TableHead>
               <TableHead className="bg-muted/50 font-semibold text-foreground">
-                Minimum Flight Time
+                Minimum Career Flight Time
+              </TableHead>
+              <TableHead className="bg-muted/50 font-semibold text-foreground">
+                Type Rating Slots
               </TableHead>
               <TableHead className="bg-muted/50 font-semibold text-foreground">
                 Date Added
@@ -239,7 +243,7 @@ export function RanksTable({ ranks, total, limit = 10 }: RanksTableProps) {
               <TableRow>
                 <TableCell
                   className="px-6 py-12 text-center text-foreground"
-                  colSpan={5}
+                  colSpan={6}
                 >
                   <div className="flex flex-col items-center gap-2">
                     <Tags className="h-6 w-6 text-foreground" />
@@ -269,6 +273,9 @@ export function RanksTable({ ranks, total, limit = 10 }: RanksTableProps) {
                   </TableCell>
                   <TableCell className="font-medium text-foreground">
                     {rank.minimumFlightTime}
+                  </TableCell>
+                  <TableCell className="font-medium text-foreground">
+                    {rank.typeRatingSlots}
                   </TableCell>
                   <TableCell className="text-foreground">
                     {new Date(rank.createdAt).toLocaleDateString('en-US', {

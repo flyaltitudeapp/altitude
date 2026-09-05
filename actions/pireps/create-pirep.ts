@@ -57,6 +57,9 @@ const createPirepSchema = z.object({
     .string()
     .max(200, 'Comments must be at most 200 characters')
     .optional(),
+  category: z.enum(['casual', 'career'], {
+    message: 'Please select a flight category',
+  }),
 });
 
 export const createPirepAction = authActionClient

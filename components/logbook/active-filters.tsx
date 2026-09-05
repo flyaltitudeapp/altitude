@@ -5,6 +5,7 @@ import { X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { PirepFilterCondition } from '@/db/queries/pireps';
+import { CATEGORY_OPTIONS, STATUS_OPTIONS } from '@/lib/pireps/constants';
 
 interface AircraftWithLivery {
   id: string;
@@ -29,6 +30,7 @@ const FIELD_LABELS: Record<string, string> = {
   cargo: 'Cargo',
   fuelBurned: 'Fuel Burned',
   status: 'Status',
+  category: 'Category',
   date: 'Date',
 };
 
@@ -45,12 +47,6 @@ const OPERATOR_LABELS: Record<string, string> = {
   before: 'before',
   after: 'after',
 };
-
-const STATUS_OPTIONS = [
-  { value: 'pending', label: 'Pending' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'denied', label: 'Denied' },
-];
 
 const convertMinutesToTime = (minutes: number): string => {
   const hours = Math.floor(minutes / 60);
@@ -88,6 +84,10 @@ export function ActiveFilters({
     if (filter.field === 'status' && filter.value) {
       const status = STATUS_OPTIONS.find((s) => s.value === filter.value);
       return status?.label || filter.value.toString();
+    }
+    if (filter.field === 'category' && filter.value) {
+      const category = CATEGORY_OPTIONS.find((c) => c.value === filter.value);
+      return category?.label || filter.value.toString();
     }
     if (filter.field === 'flightTime' && typeof filter.value === 'number') {
       return convertMinutesToTime(filter.value);

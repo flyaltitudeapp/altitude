@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { parseAsInteger, useQueryState } from 'nuqs';
 
+import { PirepCategoryBadge } from '@/components/pireps/pirep-category-badge';
 import { Button } from '@/components/ui/button';
 import { DataPagination } from '@/components/ui/data-pagination';
 import { StatusBadge } from '@/components/ui/status-badge';
@@ -51,6 +52,9 @@ export function LogbookTable({ flights, total, limit = 10 }: FlightLogProps) {
                 Flight Time
               </TableHead>
               <TableHead className="bg-muted/50 font-semibold text-foreground">
+                Category
+              </TableHead>
+              <TableHead className="bg-muted/50 font-semibold text-foreground">
                 Status
               </TableHead>
               <TableHead className="w-[50px] bg-muted/50" />
@@ -61,7 +65,7 @@ export function LogbookTable({ flights, total, limit = 10 }: FlightLogProps) {
               <TableRow>
                 <TableCell
                   className="px-6 py-12 text-center text-foreground"
-                  colSpan={5}
+                  colSpan={6}
                 >
                   <div className="flex flex-col items-center gap-2">
                     <p>No flights found</p>
@@ -86,6 +90,9 @@ export function LogbookTable({ flights, total, limit = 10 }: FlightLogProps) {
                     </TableCell>
                     <TableCell className="text-foreground">
                       {formatHoursMinutes(flight.flightTime)}
+                    </TableCell>
+                    <TableCell>
+                      <PirepCategoryBadge category={flight.category} />
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={flight.status} />

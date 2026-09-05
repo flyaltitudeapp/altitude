@@ -3,13 +3,17 @@ import type { Metadata } from 'next';
 import { EventBanner } from '@/components/dashboard/event-banner';
 import { FlightsTable } from '@/components/dashboard/flights-table';
 import { MetricCard } from '@/components/dashboard/metric-card';
+import { TyperatingsSection } from '@/components/dashboard/typeratings-section';
 import {
   getActiveEvents,
+  getAvailableTyperatingSlots,
+  getCareerFlightTimeForUser,
   getEventParticipants,
   getFlightTimeForUser,
   getTotalFlightsNumber,
   getUserLastFlights,
   getUserRank,
+  getUserTyperatings,
 } from '@/db/queries';
 import { authCheck } from '@/lib/auth-check';
 import { formatHoursMinutes, getWelcomeMessage } from '@/lib/utils';
@@ -26,10 +30,20 @@ export default async function DashboardPage() {
   const userId = session.user.id;
   const flightTime = await getFlightTimeForUser(userId);
 
-  const [totalFlights, lastFlights, rank] = await Promise.all([
+  const careerFlightTime = await getCareerFlightTimeForUser(userId);
+
+  const [
+    totalFlights,
+    lastFlights,
+    rank,
+    typeratings,
+    availableTyperatingSlots,
+  ] = await Promise.all([
     getTotalFlightsNumber(userId),
     getUserLastFlights(userId),
-    getUserRank(flightTime),
+    getUserRank(careerFlightTime),
+    getUserTyperatings(userId),
+    getAvailableTyperatingSlots(userId),
   ]);
 
   const activeEvents = await getActiveEvents();
@@ -91,10 +105,14 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
-          title="Hours Flown"
+          title="Total Hours"
           value={formatHoursMinutes(flightTime)}
+        />
+        <MetricCard
+          title="Career Hours"
+          value={formatHoursMinutes(careerFlightTime)}
         />
         <MetricCard title="Total PIREPs" value={totalFlights.totalFlights} />
         <MetricCard title="Rank" value={rank?.name ?? 'N/A'} />
@@ -120,6 +138,12 @@ export default async function DashboardPage() {
         </h2>
         <FlightsTable flights={lastFlights} />
       </div>
+
+      <TyperatingsSection
+        typeratings={typeratings}
+        availableSlots={availableTyperatingSlots}
+        totalSlots={rank?.typeRatingSlots ?? 0}
+      />
     </div>
   );
 }

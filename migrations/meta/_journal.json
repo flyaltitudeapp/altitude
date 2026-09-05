@@ -204,6 +204,48 @@
       "when": 1761668953670,
       "tag": "0028_tidy_thunderball",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "6",
+      "when": 1780000001000,
+      "tag": "0030_pireps_category",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "6",
+      "when": 1780000002000,
+      "tag": "0031_seed_career_for_rank",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "6",
+      "when": 1780000003000,
+      "tag": "0032_reorder_pireps_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "6",
+      "when": 1782072949735,
+      "tag": "0033_true_agent_zero",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "6",
+      "when": 1782075207166,
+      "tag": "0034_bored_greymalkin",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "6",
+      "when": 1782100829360,
+      "tag": "0035_whole_bedlam",
+      "breakpoints": true
     }
   ]
 }

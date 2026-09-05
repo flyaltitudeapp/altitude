@@ -402,7 +402,7 @@ export function EventForm({
                     Flight Number *
                   </FormLabel>
                   <FormControl>
-                    <Input placeholder="AF2" {...field} />
+                    <Input placeholder="UA" {...field} />
                   </FormControl>
 
                   <FormMessage className="text-xs mt-1" />
@@ -427,7 +427,7 @@ export function EventForm({
                   </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="LFPG"
+                      placeholder="KEWR"
                       {...field}
                       inputMode="text"
                       maxLength={4}
@@ -452,7 +452,7 @@ export function EventForm({
                   </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="KJFK"
+                      placeholder="KSFO"
                       {...field}
                       inputMode="text"
                       maxLength={4}
@@ -547,7 +547,7 @@ export function EventForm({
               )}
             />
 
-            <FormField
+            {/* <FormField
               control={form.control}
               name="multiplierId"
               render={({ field }) => (
@@ -580,7 +580,7 @@ export function EventForm({
                   <FormMessage className="text-xs mt-1" />
                 </FormItem>
               )}
-            />
+            /> */}
 
             <FormField
               control={form.control}

@@ -75,7 +75,7 @@ async function getAllowedAircraftForRank(rankId: string): Promise<Aircraft[]> {
   }
 
   // Single query to get all allowed aircraft for this rank
-  // Gets aircraft from all ranks with minimum flight time <= current rank's minimum flight time
+  // Gets aircraft from all ranks with minimum career flight time <= current rank's career minimum flight time
   const result = await db
     .select({
       id: aircraft.id,

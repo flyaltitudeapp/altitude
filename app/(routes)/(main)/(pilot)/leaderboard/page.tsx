@@ -37,36 +37,47 @@ const getCachedLeaderboardData = unstable_cache(
   async () => {
     const { allTime, thirtyDays, sevenDays } = getDateRanges();
 
-    const [
-      flightTimeAll,
-      flightTime30Days,
-      flightTime7Days,
-      pirepsAll,
-      pireps30Days,
-      pireps7Days,
-    ] = await Promise.all([
-      getLeaderboardByFlightTime(allTime),
-      getLeaderboardByFlightTime(thirtyDays),
-      getLeaderboardByFlightTime(sevenDays),
-      getLeaderboardByPireps(allTime),
-      getLeaderboardByPireps(thirtyDays),
-      getLeaderboardByPireps(sevenDays),
+    const buildCategoryBuckets = async (
+      category: 'casual' | 'career' | undefined
+    ) => {
+      const [
+        flightTimeAll,
+        flightTime30Days,
+        flightTime7Days,
+        pirepsAll,
+        pireps30Days,
+        pireps7Days,
+      ] = await Promise.all([
+        getLeaderboardByFlightTime(allTime, category),
+        getLeaderboardByFlightTime(thirtyDays, category),
+        getLeaderboardByFlightTime(sevenDays, category),
+        getLeaderboardByPireps(allTime, category),
+        getLeaderboardByPireps(thirtyDays, category),
+        getLeaderboardByPireps(sevenDays, category),
+      ]);
+
+      return {
+        flightTime: {
+          all: flightTimeAll,
+          30: flightTime30Days,
+          7: flightTime7Days,
+        },
+        pireps: {
+          all: pirepsAll,
+          30: pireps30Days,
+          7: pireps7Days,
+        },
+      };
+    };
+
+    const [overall, career] = await Promise.all([
+      buildCategoryBuckets(undefined),
+      buildCategoryBuckets('career'),
     ]);
 
-    return {
-      flightTime: {
-        all: flightTimeAll,
-        30: flightTime30Days,
-        7: flightTime7Days,
-      },
-      pireps: {
-        all: pirepsAll,
-        30: pireps30Days,
-        7: pireps7Days,
-      },
-    };
+    return { overall, career };
   },
-  ['leaderboard'],
+  ['leaderboard-v3'],
   { revalidate: 900 } // 15 minutes
 );
 
@@ -103,8 +114,7 @@ export default async function LeaderboardPage() {
       </div>
 
       <LeaderboardTable
-        flightTimeLeaderboard={leaderboardData.flightTime}
-        pirepsLeaderboard={leaderboardData.pireps}
+        leaderboards={leaderboardData}
         canViewUsers={canViewUsers}
       />
     </div>

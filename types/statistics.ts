@@ -4,6 +4,7 @@ export type TimeSeriesDataPoint = {
   date: string; // ISO date string (YYYY-MM-DD)
   totalPireps: number;
   totalFlightTime: number;
+  careerFlightTime: number;
   activePilots: number;
   totalUsers: number; // for active pilot rate calculation
   newPilots: number; // number of pilots who joined on this day

@@ -1,8 +1,16 @@
-import { sql } from 'drizzle-orm';
+import { type SQL, sql } from 'drizzle-orm';
 
 import { db } from '@/db';
 
-async function getLeaderboardByFlightTime(fromDate: Date): Promise<
+export type LeaderboardCategory = 'casual' | 'career';
+
+const categoryClause = (category?: LeaderboardCategory): SQL =>
+  category ? sql`AND category = ${category}` : sql``;
+
+async function getLeaderboardByFlightTime(
+  fromDate: Date,
+  category?: LeaderboardCategory
+): Promise<
   {
     pilotId: string;
     pilotName: string;
@@ -12,19 +20,21 @@ async function getLeaderboardByFlightTime(fromDate: Date): Promise<
   }[]
 > {
   const fromTimestamp = Math.floor(fromDate.getTime() / 1000);
+  const categoryFilter = categoryClause(category);
 
   const result = await db.all(sql`
     WITH period_stats AS (
-      SELECT 
+      SELECT
         user_id,
         SUM(flight_time) AS total_flight_time,
         COUNT(*) AS total_flights
-      FROM pireps 
-      WHERE status = 'approved' 
+      FROM pireps
+      WHERE status = 'approved'
         AND date >= ${fromTimestamp}
+        ${categoryFilter}
       GROUP BY user_id
     )
-    SELECT 
+    SELECT
       ps.user_id AS pilotId,
       u.name AS pilotName,
       u.image AS pilotImage,
@@ -45,7 +55,10 @@ async function getLeaderboardByFlightTime(fromDate: Date): Promise<
   }[];
 }
 
-async function getLeaderboardByPireps(fromDate: Date): Promise<
+async function getLeaderboardByPireps(
+  fromDate: Date,
+  category?: LeaderboardCategory
+): Promise<
   {
     pilotId: string;
     pilotName: string;
@@ -55,28 +68,31 @@ async function getLeaderboardByPireps(fromDate: Date): Promise<
   }[]
 > {
   const fromTimestamp = Math.floor(fromDate.getTime() / 1000);
+  const categoryFilter = categoryClause(category);
 
   const result = await db.all(sql`
     WITH period_stats AS (
-      SELECT 
+      SELECT
         user_id,
         COUNT(*) AS total_flights,
         SUM(flight_time) AS total_flight_time
-      FROM pireps 
-      WHERE status = 'approved' 
+      FROM pireps
+      WHERE status = 'approved'
         AND date >= ${fromTimestamp}
+        ${categoryFilter}
       GROUP BY user_id
     ),
     all_time_stats AS (
-      SELECT 
+      SELECT
         p.user_id,
         SUM(p.flight_time) AS all_time_flight_time
       FROM pireps p
       WHERE p.status = 'approved'
+        ${categoryFilter}
         AND p.user_id IN (SELECT user_id FROM period_stats)
       GROUP BY p.user_id
     )
-    SELECT 
+    SELECT
       ps.user_id AS pilotId,
       u.name AS pilotName,
       u.image AS pilotImage,

@@ -458,7 +458,7 @@ function FilterEditor({
       return 'HH:MM (e.g., 01:30)';
     }
     if (field === 'departureIcao' || field === 'arrivalIcao') {
-      return 'e.g., LFPG';
+      return 'e.g., KEWR';
     }
     if (field === 'airline') {
       return 'e.g., Air France';

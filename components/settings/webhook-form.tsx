@@ -6,6 +6,7 @@ import {
   Clock,
   Info,
   MessageSquare,
+  Plane,
   Star,
   UserPlus,
 } from 'lucide-react';
@@ -56,6 +57,7 @@ const schema = z.object({
   rankUpWebhookUrl: discordWebhookSchema,
   leaveRequestWebhookUrl: discordWebhookSchema,
   inactivityWebhookUrl: discordWebhookSchema,
+  typeRatingWebhookUrl: discordWebhookSchema,
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -92,6 +94,13 @@ const webhookConfigs = [
       'Notifications when pilots become inactive (no flights in 30 days)',
     icon: Clock,
   },
+  {
+    key: 'typeRatingWebhookUrl' as const,
+    label: 'Type Ratings',
+    description:
+      'Notifications when a pilot has a type rating added or removed',
+    icon: Plane,
+  },
 ] as const;
 
 interface WebhookFormProps {
@@ -111,6 +120,7 @@ export function WebhookForm({ airline }: WebhookFormProps) {
       rankUpWebhookUrl: airline.rankUpWebhookUrl || '',
       leaveRequestWebhookUrl: airline.leaveRequestWebhookUrl || '',
       inactivityWebhookUrl: airline.inactivityWebhookUrl || '',
+      typeRatingWebhookUrl: airline.typeRatingWebhookUrl || '',
     },
   });
 
