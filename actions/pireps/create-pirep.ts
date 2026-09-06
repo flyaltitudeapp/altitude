@@ -8,6 +8,7 @@ import {
   createPirep,
   sendPirepWebhookNotification,
 } from '@/domains/pireps/create-pirep';
+import { verifyPirepSafely } from '@/domains/pireps/verification';
 import { MAX_CARGO_KG, MAX_FUEL_KG, MAX_PASSENGERS } from '@/lib/constants';
 import { extractErrorMessage } from '@/lib/error-handler';
 import { authActionClient } from '@/lib/safe-action';
@@ -71,21 +72,36 @@ export const createPirepAction = authActionClient
         ctx.userId
       );
 
+      // Runs before the response so the pilot sees the final status straight
+      // away, and so the webhook can report the decision rather than
+      // announcing every PIREP as awaiting review.
+      const verification = await verifyPirepSafely(newPirep.id);
+
       after(async () => {
         await sendPirepWebhookNotification(
           parsedInput,
           newPirep.id,
           adjustedFlightTime,
-          ctx.userId
+          ctx.userId,
+          verification
         );
       });
 
       revalidatePath('/pireps');
+      revalidatePath('/logbook');
+      if (verification.autoApproved) {
+        revalidatePath('/admin/pireps');
+      }
 
       return {
         success: true,
-        message: 'PIREP created successfully',
-        pirep: newPirep,
+        message: verification.autoApproved
+          ? 'PIREP created and automatically approved'
+          : 'PIREP created successfully',
+        pirep: verification.autoApproved
+          ? { ...newPirep, status: 'approved' }
+          : newPirep,
+        autoApproved: verification.autoApproved,
       };
     } catch (error) {
       const errorMessage = extractErrorMessage(error, 'Failed to create PIREP');

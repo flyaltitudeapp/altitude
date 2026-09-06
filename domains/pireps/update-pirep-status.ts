@@ -38,11 +38,18 @@ async function updateBulkPirepStatusInDb(
     .where(inArray(pireps.id, pirepIds));
 }
 
+/**
+ * @param performedBy User making the change, or null when the system does it.
+ * @param action Overrides the logged action name, so an automated approval can
+ *   be recorded as `auto_approved` rather than being indistinguishable from a
+ *   human `approved`.
+ */
 export async function updatePirepStatus(
   pirepId: string,
   newStatus: PirepStatus,
-  performedBy: string,
-  deniedReason?: string | null
+  performedBy: string | null,
+  deniedReason?: string | null,
+  action?: string
 ) {
   if (
     newStatus === 'denied' &&
@@ -81,7 +88,7 @@ export async function updatePirepStatus(
 
   await logPirepEvent(
     pirepId,
-    newStatus,
+    action ?? newStatus,
     performedBy,
     newStatus === 'denied' ? (deniedReason ?? undefined) : undefined,
     previousValues,

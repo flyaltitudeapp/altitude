@@ -7,7 +7,9 @@ import { getMultiplierValue } from '@/db/queries/multipliers';
 import { getTyperatedAircraftForUser } from '@/db/queries/typeratings';
 import { getCareerFlightTimeForUser } from '@/db/queries/users';
 import { aircraft, airline, pireps, users } from '@/db/schema';
+import type { VerificationOutcome } from '@/domains/pireps/verification';
 import { MAX_CARGO_KG, MAX_FUEL_KG, MAX_PASSENGERS } from '@/lib/constants';
+import { VERIFICATION_CHECK_LABELS } from '@/lib/pireps/verification';
 import { formatHoursMinutes } from '@/lib/utils';
 import { type PirepData, sendPirepWebhook } from '@/lib/webhooks/pireps';
 
@@ -175,7 +177,8 @@ export async function sendPirepWebhookNotification(
   pirepData: CreatePirepData,
   pirepId: string,
   adjustedFlightTime: number,
-  userId: string
+  userId: string,
+  verification?: VerificationOutcome
 ) {
   try {
     const [userData, aircraftData, airlineData] = await Promise.all([
@@ -224,6 +227,10 @@ export async function sendPirepWebhookNotification(
       cargo: pirepData.cargo,
       submittedAt: new Date(),
       remarks: pirepData.comments || undefined,
+      autoApproved: verification?.autoApproved ?? false,
+      failedChecks: verification?.verification?.checks
+        .filter((check) => check.status === 'failed')
+        .map((check) => VERIFICATION_CHECK_LABELS[check.id]),
     };
 
     await sendPirepWebhook(airlineData.pirepsWebhookUrl, webhookPayload, {

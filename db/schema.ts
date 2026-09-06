@@ -153,6 +153,21 @@ export const airline = sqliteTable(
     callsignMaxRange: integer('callsign_max_range', { mode: 'number' })
       .$defaultFn(() => 999)
       .notNull(),
+    autoApprovalMode: text('auto_approval_mode', {
+      enum: ['off', 'advisory', 'enabled'],
+    })
+      .notNull()
+      .default('off'),
+    autoApprovalTolerance: integer('auto_approval_tolerance', {
+      mode: 'number',
+    })
+      .notNull()
+      .default(20), // Percent a filed flight time may deviate from the route
+    autoApprovalMinPireps: integer('auto_approval_min_pireps', {
+      mode: 'number',
+    })
+      .notNull()
+      .default(0), // Approved PIREPs a pilot needs before auto-approval applies
     infiniteFlightApiKey: text('infinite_flight_api_key'),
     liveFilterSuffix: text('live_filter_suffix'),
     liveFilterVirtualOrg: text('live_filter_virtual_org'),
@@ -248,6 +263,11 @@ export const pireps = sqliteTable(
     category: text('category', { enum: ['casual', 'career'] })
       .notNull()
       .default('casual'),
+    autoApproved: integer('auto_approved', { mode: 'boolean' })
+      .notNull()
+      .default(false),
+    verificationResults: text('verification_results'), // JSON payload, see lib/pireps/verification.ts
+    verifiedAt: integer('verified_at', { mode: 'timestamp' }),
     createdAt: integer('created_at', { mode: 'timestamp' })
       .$defaultFn(() => new Date())
       .notNull(),
@@ -526,9 +546,11 @@ export const pirepEvents = sqliteTable(
       .notNull()
       .references(() => pireps.id, { onDelete: 'cascade' }),
     action: text('action').notNull(),
-    performedBy: text('performed_by')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+    // Null means the event was performed by the system (e.g. auto-approval),
+    // not by a user. Pair with an explicit action such as `auto_approved`.
+    performedBy: text('performed_by').references(() => users.id, {
+      onDelete: 'cascade',
+    }),
     details: text('details'),
     previousValues: text('previous_values'),
     newValues: text('new_values'),

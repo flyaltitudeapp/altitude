@@ -17,12 +17,13 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAction } from 'next-safe-action/hooks';
-import { ReactNode, useState } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import { deletePirepAction } from '@/actions/pireps/delete-pirep';
 import { AircraftCard, DetailsCard, RouteCard } from '@/components/logbook';
 import { InlineFlightNumberEditor } from '@/components/logbook/inline-flight-number-editor';
+import { AutoApprovalChecklist } from '@/components/pireps/auto-approval-checklist';
 import { PirepEventsDialog } from '@/components/pireps/dialogs/pirep-events-dialog';
 import { PirepCategoryBadge } from '@/components/pireps/pirep-category-badge';
 import { Button } from '@/components/ui/button';
@@ -38,7 +39,8 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import type { Aircraft, Airline, Multiplier, Pirep, User } from '@/db/schema';
 import { useResponsiveDialog } from '@/hooks/use-responsive-dialog';
 import { extractErrorMessage } from '@/lib/error-handler';
-import { formatFullCallsign } from '@/lib/utils';
+import { parseVerificationResults } from '@/lib/pireps/verification';
+import { cn, formatFullCallsign } from '@/lib/utils';
 
 interface PirepDetailSharedProps {
   pirep: Pirep;
@@ -87,6 +89,11 @@ export function PirepDetails({
   const { dialogStyles } = useResponsiveDialog();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
+
+  const verification = useMemo(
+    () => parseVerificationResults(pirep.verificationResults),
+    [pirep.verificationResults]
+  );
 
   const canUserDelete = () => {
     if (!currentUserId) {
@@ -224,96 +231,119 @@ export function PirepDetails({
         </div>
       </div>
 
-      <div className="pt-3 grid gap-2 grid-cols-1 lg:grid-cols-2">
-        <RouteCard
-          departureIcao={pirep.departureIcao}
-          arrivalIcao={pirep.arrivalIcao}
-          pirepId={isEditable ? pirep.id : undefined}
-          isEditable={isEditable}
-          className="h-full"
-          departureName={departureName ?? undefined}
-          arrivalName={arrivalName ?? undefined}
-          departureCountry={departureCountry}
-          arrivalCountry={arrivalCountry}
-          icon={<Navigation className="h-4 w-4" />}
-        />
-        <AircraftCard
-          name={
-            isEditable
-              ? aircraft?.name
-                ? aircraft.livery
-                  ? `${aircraft.name} (${aircraft.livery})`
-                  : aircraft.name
-                : 'Unknown'
-              : aircraft?.name
-                ? aircraft.livery
-                  ? `${aircraft.name} (${aircraft.livery})`
-                  : aircraft.name
-                : 'Unknown'
-          }
-          pirepId={isEditable ? pirep.id : undefined}
-          isEditable={isEditable}
-          aircraftList={aircraftList}
-          currentAircraftId={pirep.aircraftId || ''}
-          className="h-full"
-          icon={<Plane className="h-4 w-4" />}
-        />
-      </div>
+      <div
+        className={cn(
+          'pt-3 grid gap-2 grid-cols-1',
+          // The sidebar column only exists when there is a checklist to put in
+          // it, otherwise the pilot view reserves 20rem of empty space.
+          isAdmin && 'xl:grid-cols-[minmax(0,1fr)_20rem]'
+        )}
+      >
+        {isAdmin && (
+          <AutoApprovalChecklist
+            verification={verification}
+            autoApproved={pirep.autoApproved}
+            verifiedAt={pirep.verifiedAt}
+            className="xl:col-start-2 xl:row-start-1"
+          />
+        )}
 
-      <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
-        <DetailsCard
-          title="Passengers"
-          value={
-            typeof pirep.passengers === 'number'
-              ? pirep.passengers.toLocaleString('en-US')
-              : '—'
-          }
-          subtitle="PAX"
-          pirepId={isEditable ? pirep.id : undefined}
-          isEditable={isEditable}
-          field={isEditable ? 'passengers' : undefined}
-          className="h-full"
-          icon={<Users className="h-4 w-4" />}
-        />
-        <DetailsCard
-          title="Cargo"
-          value={
-            typeof pirep.cargo === 'number'
-              ? pirep.cargo.toLocaleString('en-US')
-              : '—'
-          }
-          subtitle="Kilograms"
-          pirepId={isEditable ? pirep.id : undefined}
-          isEditable={isEditable}
-          field={isEditable ? 'cargo' : undefined}
-          className="h-full"
-          icon={<Package className="h-4 w-4" />}
-        />
-        <DetailsCard
-          title="Fuel Used"
-          value={
-            typeof pirep.fuelBurned === 'number'
-              ? pirep.fuelBurned.toLocaleString('en-US')
-              : '—'
-          }
-          subtitle="Kilograms"
-          pirepId={isEditable ? pirep.id : undefined}
-          isEditable={isEditable}
-          field={isEditable ? 'fuelBurned' : undefined}
-          className="h-full"
-          icon={<Droplet className="h-4 w-4" />}
-        />
-        <DetailsCard
-          title="Flight time"
-          value={pirep.flightTime}
-          pirepId={isEditable ? pirep.id : undefined}
-          isEditable={isEditable}
-          field="flightTime"
-          currentMultiplierValue={multiplier?.value || 1}
-          className="h-full"
-          icon={<Clock className="h-4 w-4" />}
-        />
-        {/* <DetailsCard
+        <div
+          className={cn(
+            'min-w-0 space-y-2',
+            isAdmin && 'xl:col-start-1 xl:row-start-1'
+          )}
+        >
+          <div className="grid gap-2 grid-cols-1 lg:grid-cols-2">
+            <RouteCard
+              departureIcao={pirep.departureIcao}
+              arrivalIcao={pirep.arrivalIcao}
+              pirepId={isEditable ? pirep.id : undefined}
+              isEditable={isEditable}
+              className="h-full"
+              departureName={departureName ?? undefined}
+              arrivalName={arrivalName ?? undefined}
+              departureCountry={departureCountry}
+              arrivalCountry={arrivalCountry}
+              icon={<Navigation className="h-4 w-4" />}
+            />
+            <AircraftCard
+              name={
+                isEditable
+                  ? aircraft?.name
+                    ? aircraft.livery
+                      ? `${aircraft.name} (${aircraft.livery})`
+                      : aircraft.name
+                    : 'Unknown'
+                  : aircraft?.name
+                    ? aircraft.livery
+                      ? `${aircraft.name} (${aircraft.livery})`
+                      : aircraft.name
+                    : 'Unknown'
+              }
+              pirepId={isEditable ? pirep.id : undefined}
+              isEditable={isEditable}
+              aircraftList={aircraftList}
+              currentAircraftId={pirep.aircraftId || ''}
+              className="h-full"
+              icon={<Plane className="h-4 w-4" />}
+            />
+          </div>
+
+          <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+            <DetailsCard
+              title="Passengers"
+              value={
+                typeof pirep.passengers === 'number'
+                  ? pirep.passengers.toLocaleString('en-US')
+                  : '—'
+              }
+              subtitle="PAX"
+              pirepId={isEditable ? pirep.id : undefined}
+              isEditable={isEditable}
+              field={isEditable ? 'passengers' : undefined}
+              className="h-full"
+              icon={<Users className="h-4 w-4" />}
+            />
+            <DetailsCard
+              title="Cargo"
+              value={
+                typeof pirep.cargo === 'number'
+                  ? pirep.cargo.toLocaleString('en-US')
+                  : '—'
+              }
+              subtitle="Kilograms"
+              pirepId={isEditable ? pirep.id : undefined}
+              isEditable={isEditable}
+              field={isEditable ? 'cargo' : undefined}
+              className="h-full"
+              icon={<Package className="h-4 w-4" />}
+            />
+            <DetailsCard
+              title="Fuel Used"
+              value={
+                typeof pirep.fuelBurned === 'number'
+                  ? pirep.fuelBurned.toLocaleString('en-US')
+                  : '—'
+              }
+              subtitle="Kilograms"
+              pirepId={isEditable ? pirep.id : undefined}
+              isEditable={isEditable}
+              field={isEditable ? 'fuelBurned' : undefined}
+              className="h-full"
+              icon={<Droplet className="h-4 w-4" />}
+            />
+            <DetailsCard
+              title="Flight time"
+              value={pirep.flightTime}
+              pirepId={isEditable ? pirep.id : undefined}
+              isEditable={isEditable}
+              field="flightTime"
+              currentMultiplierValue={multiplier?.value || 1}
+              className="h-full"
+              icon={<Clock className="h-4 w-4" />}
+            />
+            {/* <DetailsCard
           title="Multiplier"
           value={multiplier?.name || 'None'}
           subtitle={multiplier ? `x${multiplier.value}` : 'No Multiplier Added'}
@@ -325,75 +355,79 @@ export function PirepDetails({
           className="h-full"
           icon={<Zap className="h-4 w-4" />}
         /> */}
-        <DetailsCard
-          title="Submitted"
-          value={pirep.createdAt.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-          })}
-          subtitle={pirep.createdAt.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-          className="h-full"
-          icon={<Calendar className="h-4 w-4" />}
-        />
-      </div>
-
-      <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
-        {isEditable ? (
-          pirep.comments ? (
-            <div className="col-span-1 sm:col-span-2 xl:col-span-4">
-              <DetailsCard
-                title="Comments"
-                value={pirep.comments}
-                pirepId={pirep.id}
-                isEditable={true}
-                field="comments"
-                className="h-full"
-                icon={<MessageSquare className="h-4 w-4" />}
-              />
-            </div>
-          ) : (
-            <div className="col-span-1 sm:col-span-2 xl:col-span-4">
-              <DetailsCard
-                title="Comments"
-                value="No comments yet. Click to add."
-                pirepId={pirep.id}
-                isEditable={true}
-                field="comments"
-                className="h-full"
-                icon={<MessageSquare className="h-4 w-4" />}
-              />
-            </div>
-          )
-        ) : (
-          pirep.comments && (
-            <div className="col-span-1 sm:col-span-2 xl:col-span-4">
-              <DetailsCard
-                title="Comments"
-                value={pirep.comments}
-                className="h-full"
-                icon={<MessageSquare className="h-4 w-4" />}
-              />
-            </div>
-          )
-        )}
-
-        {pirep.status === 'denied' && (
-          <div className="col-span-1 sm:col-span-2 xl:col-span-4">
             <DetailsCard
-              title="Denied Reason"
-              value={pirep.deniedReason || 'No reason provided. Click to add.'}
-              pirepId={isAdmin ? pirep.id : undefined}
-              isEditable={isAdmin}
-              field={isAdmin ? 'deniedReason' : undefined}
+              title="Submitted"
+              value={pirep.createdAt.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+              })}
+              subtitle={pirep.createdAt.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
               className="h-full"
-              icon={<Ban className="h-4 w-4" />}
+              icon={<Calendar className="h-4 w-4" />}
             />
           </div>
-        )}
+
+          <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+            {isEditable ? (
+              pirep.comments ? (
+                <div className="col-span-1 sm:col-span-2 xl:col-span-4">
+                  <DetailsCard
+                    title="Comments"
+                    value={pirep.comments}
+                    pirepId={pirep.id}
+                    isEditable={true}
+                    field="comments"
+                    className="h-full"
+                    icon={<MessageSquare className="h-4 w-4" />}
+                  />
+                </div>
+              ) : (
+                <div className="col-span-1 sm:col-span-2 xl:col-span-4">
+                  <DetailsCard
+                    title="Comments"
+                    value="No comments yet. Click to add."
+                    pirepId={pirep.id}
+                    isEditable={true}
+                    field="comments"
+                    className="h-full"
+                    icon={<MessageSquare className="h-4 w-4" />}
+                  />
+                </div>
+              )
+            ) : (
+              pirep.comments && (
+                <div className="col-span-1 sm:col-span-2 xl:col-span-4">
+                  <DetailsCard
+                    title="Comments"
+                    value={pirep.comments}
+                    className="h-full"
+                    icon={<MessageSquare className="h-4 w-4" />}
+                  />
+                </div>
+              )
+            )}
+
+            {pirep.status === 'denied' && (
+              <div className="col-span-1 sm:col-span-2 xl:col-span-4">
+                <DetailsCard
+                  title="Denied Reason"
+                  value={
+                    pirep.deniedReason || 'No reason provided. Click to add.'
+                  }
+                  pirepId={isAdmin ? pirep.id : undefined}
+                  isEditable={isAdmin}
+                  field={isAdmin ? 'deniedReason' : undefined}
+                  className="h-full"
+                  icon={<Ban className="h-4 w-4" />}
+                />
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <Dialog onOpenChange={setDeleteDialogOpen} open={deleteDialogOpen}>

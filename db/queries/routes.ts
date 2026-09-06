@@ -299,6 +299,63 @@ async function getRouteById(id: string): Promise<RouteWithNumbers | null> {
   return result ? transformRouteResult(result as RouteRow) : null;
 }
 
+/**
+ * All routes published between two airports. Used by automated PIREP
+ * verification, which has to consider every route on the pair before deciding
+ * whether a filed flight number belongs to one of them.
+ */
+async function getRoutesByAirports(
+  departureIcao: string,
+  arrivalIcao: string
+): Promise<RouteWithNumbers[]> {
+  const result = await db
+    .select(routeSelectFields)
+    .from(routes)
+    .leftJoin(routesFlightNumbers, eq(routes.id, routesFlightNumbers.routeId))
+    .leftJoin(routeAircraft, eq(routes.id, routeAircraft.routeId))
+    .where(
+      sql<boolean>`UPPER(${routes.departureIcao}) = UPPER(${departureIcao}) AND UPPER(${routes.arrivalIcao}) = UPPER(${arrivalIcao})`
+    )
+    .groupBy(routes.id);
+
+  return result.map((row) => transformRouteResult(row as RouteRow));
+}
+
+/**
+ * Routes carrying a given flight number, regardless of airport pair. Lets
+ * verification tell "this flight number does not exist" apart from "this
+ * flight number belongs to a different route".
+ */
+async function getRoutesByFlightNumber(
+  flightNumber: string
+): Promise<RouteWithNumbers[]> {
+  const matchingRouteIds = await db
+    .selectDistinct({ routeId: routesFlightNumbers.routeId })
+    .from(routesFlightNumbers)
+    .where(
+      sql<boolean>`UPPER(${routesFlightNumbers.flightNumber}) = UPPER(${flightNumber})`
+    );
+
+  if (matchingRouteIds.length === 0) {
+    return [];
+  }
+
+  const result = await db
+    .select(routeSelectFields)
+    .from(routes)
+    .leftJoin(routesFlightNumbers, eq(routes.id, routesFlightNumbers.routeId))
+    .leftJoin(routeAircraft, eq(routes.id, routeAircraft.routeId))
+    .where(
+      inArray(
+        routes.id,
+        matchingRouteIds.map((row) => row.routeId)
+      )
+    )
+    .groupBy(routes.id);
+
+  return result.map((row) => transformRouteResult(row as RouteRow));
+}
+
 async function getRoutesPaginated(
   page: number,
   limit: number
@@ -486,6 +543,8 @@ export {
   findRouteIdsByFilters,
   findRouteIdsByFtsSearch,
   getRouteById,
+  getRoutesByAirports,
+  getRoutesByFlightNumber,
   getRoutesPaginated,
   searchRoutesWithFts,
 };

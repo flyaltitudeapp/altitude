@@ -23,6 +23,7 @@ import {
   createPirep,
   sendPirepWebhookNotification,
 } from '@/domains/pireps/create-pirep';
+import { verifyPirepSafely } from '@/domains/pireps/verification';
 import { MAX_CARGO_KG, MAX_FUEL_KG } from '@/lib/constants';
 import { decrypt } from '@/lib/encryption';
 import { getIFLiveries } from '@/lib/if-api';
@@ -671,11 +672,14 @@ export async function handleModal(interaction: ModalSubmitInteraction) {
       user.id
     );
 
+    const verification = await verifyPirepSafely(newPirep.id);
+
     await sendPirepWebhookNotification(
       pirepData,
       newPirep.id,
       adjustedFlightTime,
-      user.id
+      user.id,
+      verification
     );
 
     const multipliersList = await getMultipliers();

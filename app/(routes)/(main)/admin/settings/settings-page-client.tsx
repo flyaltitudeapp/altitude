@@ -8,6 +8,7 @@ import {
   MessageSquare,
   Palette,
   Settings,
+  ShieldCheck,
   Webhook,
 } from 'lucide-react';
 import { useQueryState } from 'nuqs';
@@ -16,6 +17,7 @@ import { PageLayout } from '@/components/page-layout';
 import { AirlineInlineForm } from '@/components/settings/airline-inline-form';
 import { AssetsForm } from '@/components/settings/assets-form';
 import { AuthBrandingForm } from '@/components/settings/auth-image-form';
+import { AutoApprovalForm } from '@/components/settings/auto-approval-form';
 import { DiscordForm } from '@/components/settings/discord-form';
 import { InfiniteFlightForm } from '@/components/settings/infinite-flight-form';
 import { SmtpForm } from '@/components/settings/smtp-form';
@@ -108,6 +110,15 @@ export function SettingsPageClient({
           tenantUsesAltitudeSubdomain={tenantUsesAltitudeSubdomain}
         />
       ),
+    },
+    {
+      value: 'auto-approval',
+      label: 'Auto-Approval',
+      icon: <ShieldCheck className="h-4 w-4" />,
+      title: 'PIREP Auto-Approval',
+      description:
+        'Automatically approve PIREPs that pass every check. Failing checks never deny a PIREP, they leave it for a reviewer.',
+      component: <AutoApprovalForm airline={airline} />,
     },
     {
       value: 'webhooks',

@@ -5,6 +5,7 @@ import { db } from '@/db';
 import { logPirepEvent } from '@/db/queries/pireps';
 import { getCareerFlightTimeForUser } from '@/db/queries/users';
 import { multipliers, pireps } from '@/db/schema';
+import { verifyPirepSafely } from '@/domains/pireps/verification';
 import { maybeScheduleRankup } from '@/lib/rankup-trigger';
 import { hasRequiredRole, parseRolesField } from '@/lib/roles';
 
@@ -195,6 +196,13 @@ export async function editPirep(
     );
   } else {
     await logPirepEvent(id, 'edited', userId);
+  }
+
+  // Edits can change the very fields the automated checks look at, so a stale
+  // checklist would mislead the next reviewer. Re-evaluating keeps it honest,
+  // and a PIREP that now passes is approved on the same terms as at filing.
+  if (current.status === 'pending') {
+    await verifyPirepSafely(id);
   }
 
   const newFlightTime = updates.flightTime ?? current.flightTime;

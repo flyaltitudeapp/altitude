@@ -341,11 +341,14 @@ async function getUserPirepsFiltered(
 
 /**
  * Records an event in pirep_events.
+ *
+ * A null `performedBy` means the system performed the action rather than a
+ * user, as with automated approvals.
  */
 export async function logPirepEvent(
   pirepId: string,
   action: string,
-  performedBy: string,
+  performedBy: string | null,
   details?: string | null,
   previousValues?: Record<string, unknown> | null,
   newValues?: Record<string, unknown> | null

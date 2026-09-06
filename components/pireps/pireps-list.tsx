@@ -1,6 +1,6 @@
 'use client';
 
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
 import { PirepCategoryBadge } from '@/components/pireps/pirep-category-badge';
@@ -173,18 +173,29 @@ export function PirepsList({
                     })}
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      variant={
-                        pirep.status === 'pending'
-                          ? 'pending'
-                          : pirep.status === 'approved'
-                            ? 'approved'
-                            : 'denied'
-                      }
-                    >
-                      {pirep.status.charAt(0).toUpperCase() +
-                        pirep.status.slice(1)}
-                    </Badge>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Badge
+                        variant={
+                          pirep.status === 'pending'
+                            ? 'pending'
+                            : pirep.status === 'approved'
+                              ? 'approved'
+                              : 'denied'
+                        }
+                      >
+                        {pirep.status.charAt(0).toUpperCase() +
+                          pirep.status.slice(1)}
+                      </Badge>
+                      {pirep.autoApproved && (
+                        <Badge
+                          variant="pirep"
+                          title="Approved automatically after passing every check"
+                        >
+                          <Sparkles />
+                          Auto
+                        </Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>

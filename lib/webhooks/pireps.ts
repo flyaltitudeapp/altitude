@@ -41,14 +41,22 @@ export async function sendPirepWebhook(
     lines.push(`💬 **Remarks:** ${pirepData.remarks}`);
   }
 
+  if (pirepData.autoApproved) {
+    lines.push('✅ **Status:** Automatically approved');
+  } else if (pirepData.failedChecks && pirepData.failedChecks.length > 0) {
+    lines.push(`⚠️ **Needs review:** ${pirepData.failedChecks.join(', ')}`);
+  }
+
   lines.push(`📅 **Submitted:** <t:${ts}:R>`);
 
   lines.push(`[View PIREP](${options.baseUrl}/admin/pireps/${pirepData.id})`);
 
   const embed = createDiscordEmbed({
-    title: '✈️ New PIREP Submitted',
+    title: pirepData.autoApproved
+      ? '✅ PIREP Auto-Approved'
+      : '✈️ New PIREP Submitted',
     description: lines.join('\n\n'),
-    color: 0xf39c12,
+    color: pirepData.autoApproved ? 0x2ecc71 : 0xf39c12,
     footer: { text: airlineName },
     timestamp: pirepData.submittedAt.toISOString(),
   });

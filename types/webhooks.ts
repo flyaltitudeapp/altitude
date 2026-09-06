@@ -12,6 +12,10 @@ export interface PirepData {
   cargo?: number;
   submittedAt: Date;
   remarks?: string;
+  /** Outcome of automated verification, when it ran. */
+  autoApproved?: boolean;
+  /** Names of the checks that failed, for a PIREP left pending. */
+  failedChecks?: string[];
 }
 
 export interface LeaveRequestData {

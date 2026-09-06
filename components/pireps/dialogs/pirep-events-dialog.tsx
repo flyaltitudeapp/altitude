@@ -1,5 +1,5 @@
 import { formatDistanceToNow } from 'date-fns';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import { useAction } from 'next-safe-action/hooks';
 import { useEffect, useState } from 'react';
 
@@ -39,6 +39,8 @@ const getActionText = (action: string) => {
   switch (action.toLowerCase()) {
     case 'approved':
       return 'Approved this PIREP';
+    case 'auto_approved':
+      return 'Approved this PIREP automatically — every check passed';
     case 'denied':
       return 'Denied this PIREP';
     case 'edited':
@@ -226,20 +228,31 @@ export function PirepEventsDialog({
               key={evt.id}
               className="flex gap-3 items-start p-4 rounded-md bg-panel"
             >
-              <UserAvatar
-                user={{
-                  id: evt.userId ?? '',
-                  name: evt.userName ?? '',
-                  email: '',
-                  image: evt.userImage,
-                }}
-                className="h-10 w-10 flex-shrink-0"
-              />
+              {evt.userId ? (
+                <UserAvatar
+                  user={{
+                    id: evt.userId,
+                    name: evt.userName ?? '',
+                    email: '',
+                    image: evt.userImage,
+                  }}
+                  className="h-10 w-10 flex-shrink-0"
+                />
+              ) : (
+                // No user means the system performed it, so there is no avatar
+                // to show and a blank one would read as a missing account.
+                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-muted">
+                  <Sparkles
+                    className="h-4 w-4 text-muted-foreground"
+                    aria-hidden
+                  />
+                </span>
+              )}
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="font-medium text-foreground">
-                    {evt.userName}
+                    {evt.userName ?? 'Automated'}
                   </span>
                   {airlineCallsign && evt.userCallsign && (
                     <span className="rounded-md bg-muted px-2 py-0.5 text-xs text-foreground">
